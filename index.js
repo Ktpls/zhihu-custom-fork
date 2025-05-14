@@ -3708,7 +3708,8 @@
         const haveArticle = removeItemAboutArticle && nodeItem.querySelector(".ArticleItem");
         const haveVideo = removeItemAboutVideo && nodeItem.querySelector(".ZvideoItem");
         (haveAD || haveArticle || haveVideo) && (message2 = "列表种类屏蔽");
-        if (removeLessVote && !message2) {
+        const inSearchPage = location.pathname === '/search';
+        if (!inSearchPage && removeLessVote && !message2) {
           const elementUpvote = nodeItem.querySelector(".ContentItem-actions .VoteButton--up");
           if (elementUpvote) {
             const ariaLabel = elementUpvote.getAttribute("aria-label");
