@@ -1456,12 +1456,14 @@
     const { blockedUsers: prevBlockUsers = [], blockedUsersTags: prevBlockedUsersTags = [] } = prevConfig;
     const nTags = [.../* @__PURE__ */ new Set([...prevBlockedUsersTags, ...blockedUsersTags])];
     const prevListLess = prevBlockUsers.filter((item) => !blockedUsers.findIndex((i) => i.id === item.id));
-    blockedUsers.forEach((item) => {
+    await Promise.all(blockedUsers.map(async (item) => {
       const prevUser = prevBlockUsers.find((i) => i.id === item.id);
       if (prevUser) {
-        item.tags = [.../* @__PURE__ */ new Set([...item.tags || [], ...prevUser.tags || []])];
+        item.tags = [...new Set([...(item.tags || []), ...(prevUser.tags || [])])];
+      } else {
+        await addBlockUser(item);
       }
-    });
+    }));
     let nBlackList = [...blockedUsers, ...prevListLess];
     await myStorage.updateConfig({
       ...prevConfig,
