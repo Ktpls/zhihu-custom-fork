@@ -1456,12 +1456,14 @@
     const { blockedUsers: prevBlockUsers = [], blockedUsersTags: prevBlockedUsersTags = [] } = prevConfig;
     const nTags = [.../* @__PURE__ */ new Set([...prevBlockedUsersTags, ...blockedUsersTags])];
     const prevListLess = prevBlockUsers.filter((item) => !blockedUsers.findIndex((i) => i.id === item.id));
+    const to_sync = confirm("是否需要与账号的黑名单列表同步？知乎目前只支持3000条黑名单");
     await Promise.all(blockedUsers.map(async (item) => {
       const prevUser = prevBlockUsers.find((i) => i.id === item.id);
       if (prevUser) {
         item.tags = [...new Set([...(item.tags || []), ...(prevUser.tags || [])])];
       } else {
-        await addBlockUser(item);
+        if (to_sync)
+          await addBlockUser(item);
       }
     }));
     let nBlackList = [...blockedUsers, ...prevListLess];
@@ -1471,8 +1473,10 @@
       blockedUsers: nBlackList,
       blockedUsersTags: nTags
     });
-    message("导入完成，请等待黑名单同步...");
-    onSyncBlackList(0);
+    if (to_sync){
+      message("导入完成，请等待黑名单同步...");
+      onSyncBlackList(0);
+    }
   };
   var onSyncRemoveBlockedUsers = () => {
     if (!confirm("您确定要取消屏蔽所有黑名单用户吗？")) return;
