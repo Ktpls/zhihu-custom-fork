@@ -1459,6 +1459,7 @@
     const nTags = [.../* @__PURE__ */ new Set([...prevBlockedUsersTags, ...blockedUsersTags])];
     const prevListLess = prevBlockUsers.filter((item) => !blockedUsers.findIndex((i) => i.id === item.id));
     const to_sync = confirm("是否需要与账号的黑名单列表同步？知乎目前只支持3000条黑名单");
+    const newlyAdded = [];
     await Promise.all(blockedUsers.map(async (item) => {
       const prevUser = prevBlockUsers.find((i) => i.id === item.id);
       if (prevUser) {
@@ -1467,9 +1468,14 @@
         if (to_sync)
           await addBlockUser(item);
         else
-          await updateItemAfterBlock(item);//仅与本地设置同步
+          newlyAdded.push(item);//仅与本地设置同步
       }
     }));
+    if (!to_sync) {
+      const { blockedUsers = [] } = await myStorage.getConfig();
+      blockedUsers.push(...newlyAdded);
+      await myStorage.updateConfigItem("blockedUsers", blockedUsers);
+    }
     let nBlackList = [...blockedUsers, ...prevListLess];
     await myStorage.updateConfig({
       ...prevConfig,
