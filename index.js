@@ -1466,6 +1466,8 @@
       } else {
         if (to_sync)
           await addBlockUser(item);
+        else
+          await updateItemAfterBlock(item);//仅与本地设置同步
       }
     }));
     let nBlackList = [...blockedUsers, ...prevListLess];
