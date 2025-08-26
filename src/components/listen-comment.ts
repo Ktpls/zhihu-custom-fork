@@ -131,7 +131,7 @@ const formatComments = async (nodeComments?: HTMLElement, commentBoxClass = '.cs
       if (!userLink) return;
       const userId = userLink.href.replace(/[\w\W]+\/people\//, '');
       /** 匹配在黑名单的位置 */
-      const findUser = (blockedUsers || []).find((i) => i.id === userId);
+      const findUser = await myStorage.getBlacklistedDude(userId);
       /** 是否在黑名单中 */
       const isBlocked = !!findUser;
 

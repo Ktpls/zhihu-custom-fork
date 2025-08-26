@@ -1,7 +1,7 @@
 import { store } from '../../store';
 import { dom, domA, domById, domC, fnDomReplace, formatTime, message, myStorage } from '../../tools';
 import { ID_BLOCK_LIST, initHTMLBlockedUsers } from './create-html';
-import { removeBlockUser } from './do-fetch';
+import { addBlockUser, removeBlockUser } from './do-fetch';
 import { BLACK_LIST_CONFIG_NAMES, IBlockedUser, IConfigBlackList } from './types';
 
 /** 导出黑名单部分配置 */
@@ -35,12 +35,24 @@ export const onImportBlack = async (oFREvent: ProgressEvent<FileReader>) => {
   const nTags = [...new Set([...prevBlockedUsersTags, ...blockedUsersTags])];
   // 原黑名单列表去重后剩余的用户
   const prevListLess = prevBlockUsers.filter((item) => !blockedUsers.findIndex((i) => i.id === item.id));
-  blockedUsers.forEach((item) => {
+  const to_sync = confirm("是否需要与账号的黑名单列表同步？知乎目前只支持3000条黑名单");
+  const newlyAdded: IBlockedUser[] = [];
+  await Promise.all(blockedUsers.map(async (item) => {
     const prevUser = prevBlockUsers.find((i) => i.id === item.id);
     if (prevUser) {
       item.tags = [...new Set([...(item.tags || []), ...(prevUser.tags || [])])];
+    } else {
+      if (to_sync)
+        await addBlockUser(item);
+      else
+        newlyAdded.push(item);//仅与本地设置同步
     }
-  });
+  }));
+  if (!to_sync) {
+    const { blockedUsers = [] } = await myStorage.getConfig();
+    blockedUsers.push(...newlyAdded);
+    await myStorage.updateConfigItem("blockedUsers", blockedUsers);
+  }
   // 黑名单用户合并去重
   let nBlackList: IBlockedUser[] = [...blockedUsers, ...prevListLess];
   await myStorage.updateConfig({
@@ -49,8 +61,10 @@ export const onImportBlack = async (oFREvent: ProgressEvent<FileReader>) => {
     blockedUsers: nBlackList,
     blockedUsersTags: nTags,
   });
-  message('导入完成，请等待黑名单同步...');
-  onSyncBlackList(0);
+  if (to_sync){
+    message("导入完成，请等待黑名单同步...");
+    onSyncBlackList(0);
+  }
 };
 
 /** 清空黑名单列表 */

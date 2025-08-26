@@ -53,4 +53,16 @@ export const myStorage = {
   updateHistory: async function (value: IPfHistory) {
     await this.set('pfHistory', value);
   },
+  _WeakCachedBlacklist: null,
+  getWeakCachedBlacklist: async function () {
+    let cache = this._WeakCachedBlacklist;
+    if (cache === null) {
+      let blockedUsers = (await this.getConfig())['blockedUsers'];
+      cache = this._WeakCachedBlacklist = new Map(blockedUsers.map((user: { id: string; }) => [user.id, user]));
+    }
+    return cache;
+  },
+  getBlacklistedDude: async function (userId: string | null | undefined) {
+    return (await this.getWeakCachedBlacklist()).get(userId)
+  },
 };

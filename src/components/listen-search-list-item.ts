@@ -26,7 +26,8 @@ export const myListenSearchListItem = {
       (haveAD || haveArticle || haveVideo) && (message = '列表种类屏蔽');
 
       // 低赞内容过滤
-      if (removeLessVote && !message) {
+      const inSearchPage = location.pathname === '/search';
+      if (!inSearchPage && removeLessVote && !message) {
         const elementUpvote = nodeItem.querySelector('.ContentItem-actions .VoteButton--up');
         if (elementUpvote) {
           const ariaLabel = elementUpvote.getAttribute('aria-label');

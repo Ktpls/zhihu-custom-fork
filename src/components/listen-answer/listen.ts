@@ -103,7 +103,7 @@ const processingData = async (nodes: NodeListOf<HTMLElement>) => {
 
     // 屏蔽用户的回答
     if (!message && removeBlockUserContent && blockedUsers && blockedUsers.length) {
-      const findBlocked = blockedUsers.find((i) => i.id === dataCardContent.author_member_hash_id);
+      const findBlocked = await myStorage.getBlacklistedDude(dataCardContent.author_member_hash_id);
       findBlocked && (message = `已删除黑名单用户${findBlocked.name}的回答`);
     }
 
