@@ -125,7 +125,7 @@ const formatComments = async (nodeComments?: HTMLElement, commentBoxClass = '.cs
     /** 当前 item 是否隐藏 */
     let isHidden = false;
 
-    itemCommentUsers.forEach(async (userOne) => {
+    await Promise.all(Array.from(itemCommentUsers).map(async (userOne) => {
       if (isHidden) return;
       const userLink = userOne.querySelector('.css-1gomreu a') as HTMLAnchorElement;
       if (!userLink) return;
@@ -169,7 +169,7 @@ const formatComments = async (nodeComments?: HTMLElement, commentBoxClass = '.cs
         }
       };
       userOne.append(nBox);
-    });
+    }));
 
     if (isHidden) {
       item.style.display = 'none';
