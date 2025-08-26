@@ -636,6 +636,24 @@
     notInterestedList: []
   };
   var SAVE_HISTORY_NUMBER = 500;
+  var Cache = class {
+    constructor(loader) {
+      this.cache = null;
+      this.loader = loader;
+    }
+    async get() {
+      if (this.cache === null) {
+        this.cache = await this.loader();
+      }
+      return this.cache;
+    }
+    invalidate() {
+      this.cache = null;
+    }
+    set(data) {
+      this.cache = data;
+    }
+  };
   var myStorage = {
     set: async function(name, value) {
       value.t = +/* @__PURE__ */ new Date();
@@ -654,9 +672,12 @@
       if (cParse.t < cLParse.t) return configLocal;
       return config;
     },
-    getConfig: async function() {
-      const nConfig = await this.get("pfConfig");
+    _config: new Cache(async function() {
+      const nConfig = await myStorage.get("pfConfig");
       return Promise.resolve(nConfig ? JSON.parse(nConfig) : {});
+    }),
+    getConfig: async function() {
+      return this._config.get();
     },
     getHistory: async function() {
       const nHistory = await myStorage.get("pfHistory");
@@ -676,6 +697,7 @@
     },
     updateConfig: async function(params) {
       await this.set("pfConfig", params);
+      await this._config.invalidate();
     },
     updateHistoryItem: async function(key, params) {
       const pfHistory = await this.getHistory();
@@ -685,17 +707,18 @@
     updateHistory: async function(value) {
       await this.set("pfHistory", value);
     },
-    _WeakCachedBlacklist: null,
-    getWeakCachedBlacklist:async function () {
-      let cache = this._WeakCachedBlacklist;
-      if (cache === null) {
-        let blockedUsers = (await this.getConfig())['blockedUsers'];
-        cache = this._WeakCachedBlacklist = new Map(blockedUsers.map(user => [user.id, user]));
-      }
-      return cache;
+    _weakCachedBlacklist: new Cache(async function() {
+      let blockedUsers = (await myStorage.getConfig())["blockedUsers"];
+      return new Map(blockedUsers ? blockedUsers.map((user) => [user.id, user]) : /* @__PURE__ */ new Map());
+    }),
+    getWeakCachedBlacklist: async function() {
+      return this._weakCachedBlacklist.get();
     },
-    getBlacklistedDude: async function (userId) {
-      return (await this.getWeakCachedBlacklist()).get(userId)
+    clearWeakCachedBlacklist: async function() {
+      this._weakCachedBlacklist.invalidate();
+    },
+    getBlacklistedDude: async function(userId) {
+      return (await this.getWeakCachedBlacklist()).get(userId);
     }
   };
   function throttle(fn, time = 300) {
@@ -1128,6 +1151,7 @@
     const { blockedUsers = [], openTagChooseAfterBlockedUser } = await myStorage.getConfig();
     blockedUsers.unshift(userInfo);
     await myStorage.updateConfigItem("blockedUsers", blockedUsers);
+    await myStorage.clearWeakCachedBlacklist();
     const nodeUserItem = domC("div", {
       className: `ctz-black-item ctz-black-id-${userInfo.id}`,
       innerHTML: blackItemContent(userInfo)
@@ -1148,6 +1172,7 @@
       const removeItem = dom(`.ctz-black-id-${userInfo.id}`);
       removeItem && removeItem.remove();
       myStorage.updateConfigItem("blockedUsers", blockedUsers);
+      await myStorage.clearWeakCachedBlacklist();
     }
     dom("#CTZ_BLOCKED_NUMBER", document.body).innerText = blockedUsers.length ? `黑名单数量：${blockedUsers.length}` : "";
   };
@@ -1155,7 +1180,6 @@
     const { name, urlToken } = userInfo;
     const message2 = `是否要屏蔽${name}？
 屏蔽后，对方将不能关注你、向你发私信、评论你的实名回答、使用「@」提及你、邀请你回答问题，但仍然可以查看你的公开信息。`;
-    // if (!confirm(message2)) return Promise.reject();
     return new Promise((resolve) => {
       const headers = store.getFetchHeaders();
       fetch(`https://www.zhihu.com/api/v4/members/${urlToken}/actions/block`, {
@@ -1475,18 +1499,18 @@
     await Promise.all(blockedUsers.map(async (item) => {
       const prevUser = prevBlockUsers.find((i) => i.id === item.id);
       if (prevUser) {
-        item.tags = [...new Set([...(item.tags || []), ...(prevUser.tags || [])])];
+        item.tags = [.../* @__PURE__ */ new Set([...item.tags || [], ...prevUser.tags || []])];
       } else {
         if (to_sync)
           await addBlockUser(item);
         else
-          newlyAdded.push(item);//仅与本地设置同步
+          newlyAdded.push(item);
       }
     }));
     if (!to_sync) {
-      const { blockedUsers = [] } = await myStorage.getConfig();
-      blockedUsers.push(...newlyAdded);
-      await myStorage.updateConfigItem("blockedUsers", blockedUsers);
+      const { blockedUsers: blockedUsers2 = [] } = await myStorage.getConfig();
+      blockedUsers2.push(...newlyAdded);
+      await myStorage.updateConfigItem("blockedUsers", blockedUsers2);
     }
     let nBlackList = [...blockedUsers, ...prevListLess];
     await myStorage.updateConfig({
@@ -1495,7 +1519,7 @@
       blockedUsers: nBlackList,
       blockedUsersTags: nTags
     });
-    if (to_sync){
+    if (to_sync) {
       message("导入完成，请等待黑名单同步...");
       onSyncBlackList(0);
     }
@@ -3447,7 +3471,7 @@
       if (!itemUserBox) continue;
       const itemCommentUsers = itemUserBox.querySelectorAll(".css-1tww9qq");
       let isHidden = false;
-      itemCommentUsers.forEach(async (userOne) => {
+      await Promise.all(Array.from(itemCommentUsers).map(async (userOne) => {
         if (isHidden) return;
         const userLink = userOne.querySelector(".css-1gomreu a");
         if (!userLink) return;
@@ -3481,7 +3505,7 @@
           }
         };
         userOne.append(nBox);
-      });
+      }));
       if (isHidden) {
         item.style.display = "none";
         item.classList.add(CTZ_HIDDEN_ITEM_CLASS);
@@ -3769,7 +3793,7 @@
         const haveArticle = removeItemAboutArticle && nodeItem.querySelector(".ArticleItem");
         const haveVideo = removeItemAboutVideo && nodeItem.querySelector(".ZvideoItem");
         (haveAD || haveArticle || haveVideo) && (message2 = "列表种类屏蔽");
-        const inSearchPage = location.pathname === '/search';
+        const inSearchPage = location.pathname === "/search";
         if (!inSearchPage && removeLessVote && !message2) {
           const elementUpvote = nodeItem.querySelector(".ContentItem-actions .VoteButton--up");
           if (elementUpvote) {
