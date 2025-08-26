@@ -1,6 +1,6 @@
 import { SAVE_HISTORY_NUMBER } from '../config';
 import { IPfConfig, IPfHistory } from '../config/types';
-
+import { Cache } from './cache';
 /** 使用 localStorage + GM 存储，解决跨域存储配置不同的问题 */
 export const myStorage = {
   set: async function (name: string, value: Record<string, any>) {
@@ -20,9 +20,12 @@ export const myStorage = {
     if (cParse.t < cLParse.t) return configLocal;
     return config;
   },
-  getConfig: async function (): Promise<IPfConfig> {
-    const nConfig = await this.get('pfConfig');
+  _config: new Cache<IPfConfig>(async function (): Promise<IPfConfig> {
+    const nConfig = await myStorage.get('pfConfig');
     return Promise.resolve(nConfig ? JSON.parse(nConfig) : {});
+  }),
+  getConfig: async function (): Promise<IPfConfig> {
+    return this._config.get();
   },
   getHistory: async function (): Promise<IPfHistory> {
     const nHistory = await myStorage.get('pfHistory');
@@ -44,6 +47,7 @@ export const myStorage = {
   /** 更新配置 */
   updateConfig: async function (params: IPfConfig) {
     await this.set('pfConfig', params);
+    await this._config.invalidate();
   },
   updateHistoryItem: async function (key: 'list' | 'view', params: string[]) {
     const pfHistory = await this.getHistory();
@@ -53,17 +57,15 @@ export const myStorage = {
   updateHistory: async function (value: IPfHistory) {
     await this.set('pfHistory', value);
   },
-  _WeakCachedBlacklist: null,
+  _weakCachedBlacklist: new Cache<Map<string, any>>(async function (): Promise<Map<string, any>> {
+    let blockedUsers = (await myStorage.getConfig())['blockedUsers'];
+    return new Map(blockedUsers ? blockedUsers.map((user: { id: string; }) => [user.id, user]) : new Map());
+  }),
   getWeakCachedBlacklist: async function () {
-    let cache = this._WeakCachedBlacklist;
-    if (cache === null) {
-      let blockedUsers = (await this.getConfig())['blockedUsers'];
-      cache = this._WeakCachedBlacklist = new Map(blockedUsers.map((user: { id: string; }) => [user.id, user]));
-    }
-    return cache;
+    return this._weakCachedBlacklist.get();
   },
   clearWeakCachedBlacklist: async function () {
-    this._WeakCachedBlacklist = null;
+    this._weakCachedBlacklist.invalidate();
   },
   getBlacklistedDude: async function (userId: string | null | undefined) {
     return (await this.getWeakCachedBlacklist()).get(userId)
