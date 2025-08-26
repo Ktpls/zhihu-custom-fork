@@ -684,6 +684,18 @@
     },
     updateHistory: async function(value) {
       await this.set("pfHistory", value);
+    },
+    _WeakCachedBlacklist: null,
+    getWeakCachedBlacklist:async function () {
+      let cache = this._WeakCachedBlacklist;
+      if (cache === null) {
+        let blockedUsers = (await this.getConfig())['blockedUsers'];
+        cache = this._WeakCachedBlacklist = new Map(blockedUsers.map(user => [user.id, user]));
+      }
+      return cache;
+    },
+    getBlacklistedDude: async function (userId) {
+      return (await this.getWeakCachedBlacklist()).get(userId)
     }
   };
   function throttle(fn, time = 300) {
@@ -3289,7 +3301,7 @@
         }
       }
       if (!message2 && removeBlockUserContent && blockedUsers && blockedUsers.length) {
-        const findBlocked = blockedUsers.find((i2) => i2.id === dataCardContent.author_member_hash_id);
+        const findBlocked = await myStorage.getBlacklistedDude(dataCardContent.author_member_hash_id);
         findBlocked && (message2 = `已删除黑名单用户${findBlocked.name}的回答`);
       }
       if (!message2 && removeAnonymousAnswer) {
@@ -3440,7 +3452,7 @@
         const userLink = userOne.querySelector(".css-1gomreu a");
         if (!userLink) return;
         const userId = userLink.href.replace(/[\w\W]+\/people\//, "");
-        const findUser = (blockedUsers || []).find((i2) => i2.id === userId);
+        const findUser = await myStorage.getBlacklistedDude(userId);
         const isBlocked = !!findUser;
         if (removeBlockUserComment && isBlocked) {
           isHidden = true;
@@ -3585,7 +3597,7 @@
         removeItem && (message2 = `推荐列表已屏蔽${removeItem.message}: ${title}`);
       }
       if (!message2 && removeBlockUserContent && blockedUsers && blockedUsers.length) {
-        const findBlocked = blockedUsers.find((i2) => i2.id === cardContent.author_member_hash_id);
+        const findBlocked = await myStorage.getBlacklistedDude(cardContent.author_member_hash_id);
         findBlocked && (message2 = `已删除黑名单用户${findBlocked.name}发布的内容：${title}`);
       }
       !message2 && isVideo && removeItemAboutVideo && (message2 = `列表屏蔽视频：${title}`);

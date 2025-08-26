@@ -13,16 +13,16 @@ inputs = [
     r"C:\Users\KITA\Downloads\黑名单配置-20250629-180524-1751191524089.txt",
     r"C:\Users\KITA\Downloads\黑名单配置-20250629-184250-1751193770426.txt",
 ]
-outputs = r"C:\Users\KITA\Downloads\黑名单配置202506291843.txt"
-configs = Stream(inputs).map(ReadTextFile).map(json.loads).to_list()
+outputs = r"C:\Users\KITA\Downloads\黑名单配置m.txt"
+configs = Stream(inputs).map(ReadTextFile).map(json.loads).collect(list)
 blockeds = (
     Stream(configs)
-    .flat_map(lambda x: x["blockedUsers"])
+    .flat_map(lambda x: Stream(x["blockedUsers"]))
     .distinct(lambda x: x["urlToken"])
     .collect(list)
 )
 
 print(f"{len(blockeds)=}")
-# out = configs[0]
-# out.update({"blockedUsers": blockeds})
-# WriteTextFile(outputs, json.dumps(out, ensure_ascii=False))
+out = configs[0]
+out.update({"blockedUsers": blockeds})
+WriteTextFile(outputs, json.dumps(out, ensure_ascii=False))
