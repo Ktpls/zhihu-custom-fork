@@ -62,6 +62,9 @@ export const myStorage = {
     }
     return cache;
   },
+  clearWeakCachedBlacklist: async function () {
+    this._WeakCachedBlacklist = null;
+  },
   getBlacklistedDude: async function (userId: string | null | undefined) {
     return (await this.getWeakCachedBlacklist()).get(userId)
   },

@@ -7,6 +7,7 @@ export const updateItemAfterBlock = async (userInfo: IBlockedUser) => {
   const { blockedUsers = [], openTagChooseAfterBlockedUser } = await myStorage.getConfig();
   blockedUsers.unshift(userInfo);
   await myStorage.updateConfigItem('blockedUsers', blockedUsers);
+  await myStorage.clearWeakCachedBlacklist();
   const nodeUserItem = domC('div', {
     className: `ctz-black-item ctz-black-id-${userInfo.id}`,
     innerHTML: blackItemContent(userInfo),
@@ -29,6 +30,7 @@ export const removeItemAfterBlock = async (userInfo: IBlockedUser) => {
     const removeItem = dom(`.ctz-black-id-${userInfo.id}`);
     removeItem && removeItem.remove();
     myStorage.updateConfigItem('blockedUsers', blockedUsers);
+    await myStorage.clearWeakCachedBlacklist();
   }
   dom('#CTZ_BLOCKED_NUMBER', document.body)!.innerText = blockedUsers.length ? `黑名单数量：${blockedUsers.length}` : '';
 };
