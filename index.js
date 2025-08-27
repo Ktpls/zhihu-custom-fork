@@ -1493,25 +1493,18 @@
     const prevConfig = await myStorage.getConfig();
     const { blockedUsers: prevBlockUsers = [], blockedUsersTags: prevBlockedUsersTags = [] } = prevConfig;
     const nTags = [.../* @__PURE__ */ new Set([...prevBlockedUsersTags, ...blockedUsersTags])];
-    const prevListLess = prevBlockUsers.filter((item) => !blockedUsers.findIndex((i) => i.id === item.id));
-    const to_sync = confirm("是否需要与账号的黑名单列表同步？知乎目前只支持3000条黑名单");
-    const newlyAdded = [];
+    const to_push = confirm("是否需要推送到知乎账号的黑名单列表？");
+    const to_pull = confirm("是否需要从知乎账号的黑名单列表拉取？知乎目前只支持查询前3000条黑名单");
+    const id2prevBlockUsers = new Map(prevBlockUsers.map((item) => [item.id, item])), id2NewlyBlockUsers = new Map(blockedUsers.map((item) => [item.id, item]));
+    const prevListLess = prevBlockUsers.filter((item) => !id2NewlyBlockUsers.has(item.id));
     await Promise.all(blockedUsers.map(async (item) => {
-      const prevUser = prevBlockUsers.find((i) => i.id === item.id);
+      const prevUser = id2prevBlockUsers.get(item.id);
       if (prevUser) {
         item.tags = [.../* @__PURE__ */ new Set([...item.tags || [], ...prevUser.tags || []])];
-      } else {
-        if (to_sync)
-          await addBlockUser(item);
-        else
-          newlyAdded.push(item);
+      } else if (to_push) {
+        await addBlockUser(item);
       }
     }));
-    if (!to_sync) {
-      const { blockedUsers: blockedUsers2 = [] } = await myStorage.getConfig();
-      blockedUsers2.push(...newlyAdded);
-      await myStorage.updateConfigItem("blockedUsers", blockedUsers2);
-    }
     let nBlackList = [...blockedUsers, ...prevListLess];
     await myStorage.updateConfig({
       ...prevConfig,
@@ -1519,8 +1512,8 @@
       blockedUsers: nBlackList,
       blockedUsersTags: nTags
     });
-    if (to_sync) {
-      message("导入完成，请等待黑名单同步...");
+    if (to_pull) {
+      message("导入完成，请等待黑名单拉取...");
       onSyncBlackList(0);
     }
   };

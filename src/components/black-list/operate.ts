@@ -33,36 +33,30 @@ export const onImportBlack = async (oFREvent: ProgressEvent<FileReader>) => {
   const { blockedUsers: prevBlockUsers = [], blockedUsersTags: prevBlockedUsersTags = [] } = prevConfig;
   // 标签合并去重
   const nTags = [...new Set([...prevBlockedUsersTags, ...blockedUsersTags])];
+  const to_push = confirm("是否需要推送到知乎账号的黑名单列表？");
+  const to_pull = confirm("是否需要从知乎账号的黑名单列表拉取？知乎目前只支持查询前3000条黑名单");
   // 原黑名单列表去重后剩余的用户
-  const prevListLess = prevBlockUsers.filter((item) => !blockedUsers.findIndex((i) => i.id === item.id));
-  const to_sync = confirm("是否需要与账号的黑名单列表同步？知乎目前只支持3000条黑名单");
-  const newlyAdded: IBlockedUser[] = [];
+  const id2prevBlockUsers = new Map(prevBlockUsers.map((item) => [item.id, item])),
+    id2NewlyBlockUsers = new Map(blockedUsers.map((item) => [item.id, item]));
+  const blocked_only_in_previous_list = prevBlockUsers.filter((item) => !id2NewlyBlockUsers.has(item.id));
   await Promise.all(blockedUsers.map(async (item) => {
-    const prevUser = prevBlockUsers.find((i) => i.id === item.id);
+    const prevUser = id2prevBlockUsers.get(item.id);
     if (prevUser) {
       item.tags = [...new Set([...(item.tags || []), ...(prevUser.tags || [])])];
-    } else {
-      if (to_sync)
-        await addBlockUser(item);
-      else
-        newlyAdded.push(item);//仅与本地设置同步
+    } else if (to_push) {
+      await addBlockUser(item);
     }
   }));
-  if (!to_sync) {
-    const { blockedUsers = [] } = await myStorage.getConfig();
-    blockedUsers.push(...newlyAdded);
-    await myStorage.updateConfigItem("blockedUsers", blockedUsers);
-  }
   // 黑名单用户合并去重
-  let nBlackList: IBlockedUser[] = [...blockedUsers, ...prevListLess];
+  let nBlackList: IBlockedUser[] = [...blockedUsers, ...blocked_only_in_previous_list];
   await myStorage.updateConfig({
     ...prevConfig,
     ...configBlack,
     blockedUsers: nBlackList,
     blockedUsersTags: nTags,
   });
-  if (to_sync){
-    message("导入完成，请等待黑名单同步...");
+  if (to_pull) {
+    message("导入完成，请等待黑名单拉取...");
     onSyncBlackList(0);
   }
 };
