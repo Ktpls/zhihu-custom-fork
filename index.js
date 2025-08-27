@@ -1320,7 +1320,7 @@
     const { blockedUsers = [] } = await myStorage.getConfig();
     dom("#CTZ_BLOCKED_NUMBER", domMain).innerText = blockedUsers.length ? `黑名单数量：${blockedUsers.length}` : "";
     const nodeBlockedUsers = dom(`#${ID_BLOCK_LIST}`, domMain);
-    nodeBlockedUsers.innerHTML = blockedUsers.map(
+    nodeBlockedUsers.innerHTML = blockedUsers.slice(0, 500).map(
       (info) => `<div class="ctz-black-item ctz-black-id-${info.id}" data-info='${JSON.stringify({
         ...info,
         name: ""
@@ -1496,7 +1496,7 @@
     const to_push = confirm("是否需要推送到知乎账号的黑名单列表？");
     const to_pull = confirm("是否需要从知乎账号的黑名单列表拉取？知乎目前只支持查询前3000条黑名单");
     const id2prevBlockUsers = new Map(prevBlockUsers.map((item) => [item.id, item])), id2NewlyBlockUsers = new Map(blockedUsers.map((item) => [item.id, item]));
-    const prevListLess = prevBlockUsers.filter((item) => !id2NewlyBlockUsers.has(item.id));
+    const blocked_only_in_previous_list = prevBlockUsers.filter((item) => !id2NewlyBlockUsers.has(item.id));
     await Promise.all(blockedUsers.map(async (item) => {
       const prevUser = id2prevBlockUsers.get(item.id);
       if (prevUser) {
@@ -1505,7 +1505,7 @@
         await addBlockUser(item);
       }
     }));
-    let nBlackList = [...blockedUsers, ...prevListLess];
+    let nBlackList = [...blockedUsers, ...blocked_only_in_previous_list];
     await myStorage.updateConfig({
       ...prevConfig,
       ...configBlack,

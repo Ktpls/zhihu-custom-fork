@@ -145,6 +145,7 @@ export const initHTMLBlockedUsers = async (domMain: HTMLElement) => {
 
   const nodeBlockedUsers = dom(`#${ID_BLOCK_LIST}`, domMain)!;
   nodeBlockedUsers.innerHTML = blockedUsers
+    .slice(0, 500)
     .map(
       (info) =>
         `<div class="ctz-black-item ctz-black-id-${info.id}" data-info='${JSON.stringify({
