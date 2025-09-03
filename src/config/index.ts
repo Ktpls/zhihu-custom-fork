@@ -43,6 +43,7 @@ export const CONFIG_FILTER_DEFAULT: IConfigFilter = {
   removeAnonymousAnswer: false,
   removeMyOperateAtFollow: false,
   removeTopAD: true,
+  blockAnswerShorterThanThresh: 0,
 };
 
 /** 悬浮模块默认配置 */

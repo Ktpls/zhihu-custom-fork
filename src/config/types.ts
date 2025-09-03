@@ -289,6 +289,8 @@ export interface IConfigFilter {
   listOutPutNotInterested?: boolean;
   /** 不感兴趣的内容题目 */
   notInterestedList?: string[];
+  /** 屏蔽短于指定长度的回答 */
+  blockAnswerShorterThanThresh?: number;
 }
 
 /** 悬浮模块默认配置 */
