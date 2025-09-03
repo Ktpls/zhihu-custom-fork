@@ -390,6 +390,8 @@ export interface IPfConfig extends IConfigHidden, IConfigFilter, IConfigSuspensi
   questionCreatedAndModifiedTime?: boolean;
   /** 文章发布时间置顶 */
   articleCreateTimeToTop?: boolean;
+  /** 黑名单与服务器同步 */
+  syncBlacklistWithZhihuServer?: boolean;
   /** 购物链接显示设置 0 1 2 */
   linkShopping?: ELinkShopping;
   /** 列表标题文字大小 */
