@@ -1,4 +1,4 @@
-import { onExportBlack, onImportBlack, onSyncBlackList, onSyncRemoveBlockedUsers } from '../components/black-list';
+import { onExportBlack, onImportBlack, onPullBlacklistFromZhihu, onPushBlacklistToZhihu, onSyncBlackList, onSyncRemoveBlockedUsers } from '../components/black-list';
 import { onChangeMenu, openChange } from '../components/ctz-dialog';
 import { myCustomStyle } from '../components/custom-style';
 import { fnChanger } from '../components/fn-changer';
@@ -173,4 +173,6 @@ const myButtonOperation: Record<string, Function> = {
       window.open(`https://www.zhihu.com/search?q=${value}`);
     }
   },
+  pushBlacklistToZhihu: onPushBlacklistToZhihu,
+  pullBlacklistFromZhihu: onPullBlacklistFromZhihu,
 };

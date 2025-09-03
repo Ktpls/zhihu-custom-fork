@@ -1,5 +1,6 @@
 import { store } from '../../store';
 import { dom, domA, domById, domC, fnDomReplace, formatTime, message, myStorage } from '../../tools';
+import { Semaphore } from '../../tools/semaphore';
 import { ID_BLOCK_LIST, initHTMLBlockedUsers } from './create-html';
 import { addBlockUser, removeBlockUser } from './do-fetch';
 import { BLACK_LIST_CONFIG_NAMES, IBlockedUser, IConfigBlackList } from './types';
@@ -134,4 +135,25 @@ export function onSyncBlackList(offset = 0, l: IBlockedUser[] = []) {
         message('黑名单列表同步完成');
       }
     });
+}
+export const onPushBlacklistToZhihu = async () => {
+  return;
+  const { blockedUsers: bois = [] } = await myStorage.getConfig();
+  // 创建信号量，限制并发数为100
+  const semaphore = new Semaphore(100);
+  Promise.all(bois.map(async (item) => {
+    // 获取信号量
+    await semaphore.acquire();
+    try {
+      await addBlockUser(item, true);
+    } catch (e) {
+    }
+    // 释放信号量
+    await semaphore.release();
+  })).then(() => {
+    message('黑名单已推送至知乎');
+  });
+}
+export const onPullBlacklistFromZhihu = async () => {
+
 }
