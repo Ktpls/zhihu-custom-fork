@@ -40,12 +40,19 @@ export const onImportBlack = async (oFREvent: ProgressEvent<FileReader>) => {
   const id2prevBlockUsers = new Map(prevBlockUsers.map((item) => [item.id, item])),
     id2NewlyBlockUsers = new Map(blockedUsers.map((item) => [item.id, item]));
   const blocked_only_in_previous_list = prevBlockUsers.filter((item) => !id2NewlyBlockUsers.has(item.id));
+  let semaphore = new Semaphore(100);
   await Promise.all(blockedUsers.map(async (item) => {
     const prevUser = id2prevBlockUsers.get(item.id);
     if (prevUser) {
       item.tags = [...new Set([...(item.tags || []), ...(prevUser.tags || [])])];
     } else if (to_push) {
-      await addBlockUser(item);
+      await semaphore.acquire();
+      try {
+        await addBlockUser(item);
+      }
+      finally {
+        await semaphore.release();
+      }
     }
   }));
   // 黑名单用户合并去重
@@ -147,10 +154,10 @@ export const onPushBlacklistToZhihu = async () => {
     try {
       const { urlToken } = item;
       await removeBlockUserOnZhihuServer(urlToken);
-    } catch (e) {
+    } finally {
+      // 释放信号量
+      await semaphore.release();
     }
-    // 释放信号量
-    await semaphore.release();
   })).then(() => {
     message('黑名单已推送至知乎');
   });

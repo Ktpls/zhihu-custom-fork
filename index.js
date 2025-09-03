@@ -1538,12 +1538,18 @@
     const to_pull = confirm("是否需要从知乎账号的黑名单列表拉取？知乎目前只支持查询前3000条黑名单");
     const id2prevBlockUsers = new Map(prevBlockUsers.map((item) => [item.id, item])), id2NewlyBlockUsers = new Map(blockedUsers.map((item) => [item.id, item]));
     const blocked_only_in_previous_list = prevBlockUsers.filter((item) => !id2NewlyBlockUsers.has(item.id));
+    let semaphore = new Semaphore(100);
     await Promise.all(blockedUsers.map(async (item) => {
       const prevUser = id2prevBlockUsers.get(item.id);
       if (prevUser) {
         item.tags = [.../* @__PURE__ */ new Set([...item.tags || [], ...prevUser.tags || []])];
       } else if (to_push) {
-        await addBlockUser(item);
+        await semaphore.acquire();
+        try {
+          await addBlockUser(item);
+        } finally {
+          await semaphore.release();
+        }
       }
     }));
     let nBlackList = [...blockedUsers, ...blocked_only_in_previous_list];
@@ -1630,9 +1636,9 @@
       try {
         const { urlToken } = item;
         await removeBlockUserOnZhihuServer(urlToken);
-      } catch (e) {
+      } finally {
+        await semaphore.release();
       }
-      await semaphore.release();
     })).then(() => {
       message("黑名单已推送至知乎");
     });
