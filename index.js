@@ -3643,7 +3643,8 @@
       fetchInterceptStatus,
       removeBlockUserContent,
       blockedUsers = [],
-      notInterestedList = []
+      notInterestedList = [],
+      blockAnswerShorterThanThresh = 0
     } = pfConfig;
     const pfHistory = await myStorage.getHistory();
     const historyList = pfHistory.list;
@@ -3703,6 +3704,15 @@
       }
       if (!message2 && removeItemQuestionAsk && nodeItem.querySelector(".TopstoryQuestionAskItem")) {
         message2 = "屏蔽邀请回答";
+      }
+      if (!message2 && blockAnswerShorterThanThresh > 0) {
+        const domRichContent = nodeItem.querySelector(".RichContent");
+        if (domRichContent) {
+          const innerText = domRichContent.innerText || "";
+          if (innerText.length < blockAnswerShorterThanThresh) {
+            message2 = `屏蔽短内容: ${title}, ${innerText.length}字符`;
+          }
+        }
       }
       !message2 && (message2 = replaceBlockWord(title, nodeContentItem, filterKeywords, title, "标题"));
       if (!message2) {

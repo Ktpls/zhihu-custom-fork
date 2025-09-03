@@ -33,6 +33,7 @@ export const processingData = async (nodes: NodeListOf<HTMLElement>) => {
     removeBlockUserContent,
     blockedUsers = [],
     notInterestedList = [],
+    blockAnswerShorterThanThresh = 0,
   } = pfConfig;
   const pfHistory = await myStorage.getHistory();
   const historyList = pfHistory.list;
@@ -110,6 +111,17 @@ export const processingData = async (nodes: NodeListOf<HTMLElement>) => {
     // 屏蔽邀请回答
     if (!message && removeItemQuestionAsk && nodeItem.querySelector('.TopstoryQuestionAskItem')) {
       message = '屏蔽邀请回答';
+    }
+
+    // 屏蔽短内容
+    if (!message && blockAnswerShorterThanThresh > 0) {
+      const domRichContent = nodeItem.querySelector('.RichContent');
+      if (domRichContent) {
+        const innerText = (domRichContent as HTMLElement).innerText || '';
+        if (innerText.length < blockAnswerShorterThanThresh) {
+          message = `屏蔽短内容: ${title}, ${innerText.length}字符`;
+        }
+      }
     }
 
     // 标题屏蔽词过滤
