@@ -2,7 +2,7 @@ import { store } from '../../store';
 import { dom, domA, domById, domC, fnDomReplace, formatTime, message, myStorage } from '../../tools';
 import { Semaphore } from '../../tools/semaphore';
 import { ID_BLOCK_LIST, initHTMLBlockedUsers } from './create-html';
-import { addBlockUser, removeBlockUser } from './do-fetch';
+import { addBlockUser, blockUserOnZhihuServer, removeBlockUser, removeBlockUserOnZhihuServer } from './do-fetch';
 import { BLACK_LIST_CONFIG_NAMES, IBlockedUser, IConfigBlackList } from './types';
 
 /** 导出黑名单部分配置 */
@@ -145,7 +145,8 @@ export const onPushBlacklistToZhihu = async () => {
     // 获取信号量
     await semaphore.acquire();
     try {
-      await addBlockUser(item, true);
+      const { urlToken } = item;
+      await removeBlockUserOnZhihuServer(urlToken);
     } catch (e) {
     }
     // 释放信号量
@@ -155,5 +156,6 @@ export const onPushBlacklistToZhihu = async () => {
   });
 }
 export const onPullBlacklistFromZhihu = async () => {
-
+  return;
+  blockUserOnZhihuServer;
 }

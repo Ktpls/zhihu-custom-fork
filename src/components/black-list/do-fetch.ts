@@ -37,7 +37,7 @@ export const removeBlockUser = (info: IBlockedUser, needConfirm = true, pushToZh
   });
 };
 
-async function removeBlockUserOnZhihuServer(urlToken: string) {
+export async function removeBlockUserOnZhihuServer(urlToken: string) {
   const headers = store.getFetchHeaders();
   await fetch(`https://www.zhihu.com/api/v4/members/${urlToken}/actions/block`, {
     method: 'DELETE',
@@ -49,7 +49,7 @@ async function removeBlockUserOnZhihuServer(urlToken: string) {
   });
 }
 
-async function blockUserOnZhihuServer(urlToken: string) {
+export async function blockUserOnZhihuServer(urlToken: string) {
   const headers = store.getFetchHeaders();
   await fetch(`https://www.zhihu.com/api/v4/members/${urlToken}/actions/block`, {
     method: 'POST',

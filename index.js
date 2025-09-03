@@ -1628,7 +1628,8 @@
     Promise.all(bois.map(async (item) => {
       await semaphore.acquire();
       try {
-        await addBlockUser(item, true);
+        const { urlToken } = item;
+        await removeBlockUserOnZhihuServer(urlToken);
       } catch (e) {
       }
       await semaphore.release();
@@ -1637,6 +1638,8 @@
     });
   };
   var onPullBlacklistFromZhihu = async () => {
+    return;
+    blockUserOnZhihuServer;
   };
   var CLASS_TOP_BLOCK = "ctz-top-block-in-user-home";
   var blockObserver;
