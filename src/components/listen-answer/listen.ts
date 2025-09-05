@@ -60,7 +60,7 @@ const processingData = async (nodes: NodeListOf<HTMLElement>) => {
     blockedUsers,
     blockWordsAnswer = [],
     highPerformanceAnswer,
-    blockAnswerShorterThanThresh = 0,
+    blockAnswerShorterThanThreshOnAnswer = 0,
   } = config;
 
   for (let i = 0, len = nodes.length; i < len; i++) {
@@ -115,11 +115,11 @@ const processingData = async (nodes: NodeListOf<HTMLElement>) => {
     }
 
     // 屏蔽短回答
-    if (!message && blockAnswerShorterThanThresh > 0) {
+    if (!message && blockAnswerShorterThanThreshOnAnswer > 0) {
       const richContent = nodeItem.querySelector('.RichContent-inner') as HTMLElement;
       if (richContent) {
         const contentText = richContent.innerText || '';
-        if (contentText.length < blockAnswerShorterThanThresh) {
+        if (contentText.length < blockAnswerShorterThanThreshOnAnswer) {
           message = `已屏蔽一条短回答（${contentText.length}字符）`;
         }
       }

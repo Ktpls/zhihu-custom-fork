@@ -33,7 +33,7 @@ export const processingData = async (nodes: NodeListOf<HTMLElement>) => {
     removeBlockUserContent,
     blockedUsers = [],
     notInterestedList = [],
-    blockAnswerShorterThanThresh = 0,
+    blockAnswerShorterThanThreshOnList = 0,
   } = pfConfig;
   const pfHistory = await myStorage.getHistory();
   const historyList = pfHistory.list;
@@ -114,11 +114,11 @@ export const processingData = async (nodes: NodeListOf<HTMLElement>) => {
     }
 
     // 屏蔽短内容
-    if (!message && blockAnswerShorterThanThresh > 0) {
+    if (!message && blockAnswerShorterThanThreshOnList > 0) {
       const domRichContent = nodeItem.querySelector('.RichContent');
       if (domRichContent) {
         const innerText = (domRichContent as HTMLElement).innerText || '';
-        if (innerText.length < blockAnswerShorterThanThresh) {
+        if (innerText.length < blockAnswerShorterThanThreshOnList) {
           message = `屏蔽短内容: ${title}, ${innerText.length}字符`;
         }
       }

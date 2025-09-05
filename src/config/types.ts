@@ -290,7 +290,8 @@ export interface IConfigFilter {
   /** 不感兴趣的内容题目 */
   notInterestedList?: string[];
   /** 屏蔽短于指定长度的回答 */
-  blockAnswerShorterThanThresh?: number;
+  blockAnswerShorterThanThreshOnList?: number;
+  blockAnswerShorterThanThreshOnAnswer?: number;
 }
 
 /** 悬浮模块默认配置 */
