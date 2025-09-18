@@ -146,17 +146,17 @@ export interface IConfigHidden {
   hiddenAnswerItemTime?: boolean;
   /** 回答底部发布编辑时间（保留IP） */
   hiddenAnswerItemTimeButHaveIP?: boolean;
-  /** 发现模块-隐藏首页 */
-  hiddenAppHeaderTabHome?: boolean;
-  /** 发现模块-隐藏知学堂 */
-  hiddenAppHeaderTabZhi?: boolean;
-  /** 发现模块-隐藏会员 */
-  // hiddenAppHeaderTabVIP?: boolean;
-  // /** 发现模块-隐藏发现 */
-  /** 发现模块-知乎直答 */
-  hiddenAppHeaderTabFind?: boolean;
-  /** 发现模块-隐藏等你来答 */
-  hiddenAppHeaderTabWaitingForYou?: boolean;
+  // /** 发现模块-隐藏首页 */
+  // hiddenAppHeaderTabHome?: boolean;
+  // /** 发现模块-隐藏知学堂 */
+  // hiddenAppHeaderTabZhi?: boolean;
+  // /** 发现模块-隐藏会员 */
+  // // hiddenAppHeaderTabVIP?: boolean;
+  // // /** 发现模块-隐藏发现 */
+  // /** 发现模块-知乎直答 */
+  // hiddenAppHeaderTabFind?: boolean;
+  // /** 发现模块-隐藏等你来答 */
+  // hiddenAppHeaderTabWaitingForYou?: boolean;
   /** 隐藏全部问题列表切换模块 */
   hiddenHomeListTab?: boolean;
   /** 问题列表切换 - 隐藏关注 */
@@ -243,6 +243,8 @@ export interface IConfigHidden {
   hiddenAnswerDownTags?: boolean;
   /** 隐藏回答「谢邀」标签 */
   hiddenThanksInvite?: boolean;
+  /** 隐藏首页分享想法模块 */
+  hiddenHomeWriteArea?: boolean;
 }
 
 /** 屏蔽内容模块默认配置 */
@@ -296,30 +298,30 @@ export interface IConfigFilter {
 
 /** 悬浮模块默认配置 */
 export interface IConfigSuspension {
-  /** 问题列表切换 */
-  suspensionHomeTab?: boolean;
-  /** 问题列表切换定位 */
-  suspensionHomeTabPo?: string;
-  /** 问题列表切换是否固定 */
-  suspensionHomeTabFixed?: boolean;
-  /** 顶部发现模块 */
-  suspensionFind?: boolean;
-  /** 顶部发现模块定位 */
-  suspensionFindPo?: string;
-  /** 顶部发现模块是否固定 */
-  suspensionFindFixed?: boolean;
-  /** 搜索栏 */
-  suspensionSearch?: boolean;
-  /** 搜索栏定位 */
-  suspensionSearchPo?: string;
-  /** 搜索栏是否固定 */
-  suspensionSearchFixed?: boolean;
-  /** 个人中心 */
-  suspensionUser?: boolean;
-  /** 个人中心定位 */
-  suspensionUserPo?: string;
-  /** 个人中心是否固定 */
-  suspensionUserFixed?: boolean;
+  // /** 问题列表切换 */
+  // suspensionHomeTab?: boolean;
+  // /** 问题列表切换定位 */
+  // suspensionHomeTabPo?: string;
+  // /** 问题列表切换是否固定 */
+  // suspensionHomeTabFixed?: boolean;
+  // /** 顶部发现模块 */
+  // suspensionFind?: boolean;
+  // /** 顶部发现模块定位 */
+  // suspensionFindPo?: string;
+  // /** 顶部发现模块是否固定 */
+  // suspensionFindFixed?: boolean;
+  // /** 搜索栏 */
+  // suspensionSearch?: boolean;
+  // /** 搜索栏定位 */
+  // suspensionSearchPo?: string;
+  // /** 搜索栏是否固定 */
+  // suspensionSearchFixed?: boolean;
+  // /** 个人中心 */
+  // suspensionUser?: boolean;
+  // /** 个人中心定位 */
+  // suspensionUserPo?: string;
+  // /** 个人中心是否固定 */
+  // suspensionUserFixed?: boolean;
   /** 长回答和列表收起按钮*/
   suspensionPickUp?: boolean;
   /** 悬浮收起按钮位置，数字越大离右侧越远 */

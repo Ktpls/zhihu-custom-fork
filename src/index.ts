@@ -21,7 +21,7 @@ import { changeICO, changeTitle, myCachePageTitle } from './components/page-titl
 import { myCollectionExport, printArticle, printPeopleAnswer, printPeopleArticles } from './components/print';
 import { closeAllSelect } from './components/select';
 import { changeSizeBeforeResize, mySize } from './components/size';
-import { changeSuspensionTab, initCacheHeader, suspensionPickupAttribute } from './components/suspension';
+import { suspensionPickupAttribute } from './components/suspension';
 import { addArticleTime, addQuestionTime } from './components/time';
 import { myListenUserHomeList } from './components/user-home';
 import { changeVideoStyle, fixVideoAutoPlay, initVideoDownload } from './components/video';
@@ -72,13 +72,6 @@ import { INNER_CSS } from './web-resources';
       };
     }
     await myStorage.updateConfig(config);
-
-    // TODO: 更改黑名单列表字段，10个 feature 版本后删除(removeBlockUserContentList)，5.2.0 添加，5.12.0 删除
-    if (config.removeBlockUserContentList && config.removeBlockUserContentList.length) {
-      config.blockedUsers = [...config.removeBlockUserContentList];
-      delete config.removeBlockUserContentList;
-      await myStorage.updateConfig(config);
-    }
 
     initHistoryView();
     appendHiddenStyle();
@@ -176,7 +169,7 @@ import { INNER_CSS } from './web-resources';
       echoData();
       changeICO();
       changeTitle();
-      changeSuspensionTab();
+      // changeSuspensionTab();
       suspensionPickupAttribute();
       mySize.initAfterLoad();
       myCustomStyle.init();
@@ -184,7 +177,7 @@ import { INNER_CSS } from './web-resources';
       initResizeObserver();
       myCtzTypeOperation.init();
       echoHistory();
-      initCacheHeader();
+      // initCacheHeader();
       changeSizeBeforeResize();
 
       if (removeTopAD) {
@@ -319,7 +312,8 @@ import { INNER_CSS } from './web-resources';
   });
 
   // 复制代码块删除版权信息
-  document.addEventListener('copy', function (event) {
+  window.addEventListener('copy', function (event) {
+    console.log('???????copy')
     eventCopy(event);
   });
 
