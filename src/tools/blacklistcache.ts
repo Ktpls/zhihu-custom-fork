@@ -107,4 +107,14 @@ export class BlacklistCache<T = any> {
     // 布隆过滤器说可能存在，需要在map中确认
     return this.map!.has(key);
   }
+
+  /**
+   * 根据指定的key获取对应的元素
+   * @param key 要查找的key
+   * @returns 对应的元素，如果不存在则返回undefined
+   */
+  public async key_get(key: string): Promise<T | undefined> {
+    await this.ensureCacheBuilt();
+    return this.map!.get(key);
+  }
 }
