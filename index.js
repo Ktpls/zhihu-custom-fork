@@ -249,7 +249,7 @@
     const { blockedUsers = [], openTagChooseAfterBlockedUser } = await myStorage.getConfig();
     blockedUsers.unshift(userInfo);
     await myStorage.updateConfigItem("blockedUsers", blockedUsers);
-    await myStorage.clearWeakCachedBlacklist();
+    await myStorage.getWeakCachedBlacklist().add(userInfo);
     const nodeUserItem = domC("div", {
       className: `ctz-black-item ctz-black-id-${userInfo.id}`,
       innerHTML: blackItemContent(userInfo)
@@ -270,7 +270,7 @@
       const removeItem = dom(`.ctz-black-id-${userInfo.id}`);
       removeItem && removeItem.remove();
       myStorage.updateConfigItem("blockedUsers", blockedUsers);
-      await myStorage.clearWeakCachedBlacklist();
+      await myStorage.getWeakCachedBlacklist().remove(userInfo);
     }
     dom("#CTZ_BLOCKED_NUMBER", document.body).innerText = blockedUsers.length ? `黑名单数量：${blockedUsers.length}` : "";
   };
@@ -2529,6 +2529,112 @@
     notInterestedList: []
   };
   var SAVE_HISTORY_NUMBER = 500;
+  var BloomFilter = class {
+    constructor(size = 1e3, hashCount = 3) {
+      this.size = size;
+      this.bitArray = new Uint8Array(size);
+      this.hashFunctions = this.generateHashFunctions(hashCount);
+    }
+    generateHashFunctions(count) {
+      const functions = [];
+      const bases = [31, 37, 41, 43, 47, 53, 59, 61, 67, 71];
+      for (let i = 0; i < count && i < bases.length; i++) {
+        const base = bases[i];
+        functions.push((key) => {
+          let hash = 0;
+          for (let j = 0; j < key.length; j++) {
+            hash = (hash * base + key.charCodeAt(j)) % this.size;
+          }
+          return Math.abs(hash) % this.size;
+        });
+      }
+      return functions;
+    }
+    add(key) {
+      if (typeof key !== "string") {
+        throw new Error("Key must be a string");
+      }
+      for (const hashFn of this.hashFunctions) {
+        const index2 = hashFn(key);
+        this.bitArray[index2] = 1;
+      }
+    }
+    mightContain(key) {
+      if (typeof key !== "string") {
+        return false;
+      }
+      for (const hashFn of this.hashFunctions) {
+        const index2 = hashFn(key);
+        if (this.bitArray[index2] === 0) {
+          return false;
+        }
+      }
+      return true;
+    }
+    clear() {
+      this.bitArray.fill(0);
+    }
+    getSize() {
+      return this.size;
+    }
+    getHashFunctionCount() {
+      return this.hashFunctions.length;
+    }
+    estimateCount() {
+      const ones = this.bitArray.reduce((sum, bit) => sum + bit, 0);
+      if (ones === 0) return 0;
+      const m = this.size;
+      const k = this.hashFunctions.length;
+      const n = -m / k * Math.log(1 - ones / m);
+      return Math.max(0, Math.round(n));
+    }
+  };
+  var BlacklistCache = class {
+    constructor(key_getter, get_all) {
+      this.map = null;
+      this.bloom = null;
+      this.key_getter = key_getter;
+      this.get_all = get_all;
+    }
+    async ensureCacheBuilt() {
+      if (this.map === null || this.bloom === null) {
+        await this.rebuild();
+      }
+    }
+    async add(item) {
+      await this.ensureCacheBuilt();
+      const key = this.key_getter(item);
+      this.map.set(key, item);
+    }
+    async remove(item) {
+      await this.ensureCacheBuilt();
+      const key = this.key_getter(item);
+      this.map.delete(key);
+    }
+    async rebuild() {
+      this.map = /* @__PURE__ */ new Map();
+      this.bloom = new BloomFilter(1e3, 3);
+      const allItems = await this.get_all();
+      const size = Math.max(allItems.length * 3, 1e3);
+      this.bloom = new BloomFilter(size, 3);
+      for (const item of allItems) {
+        const key = this.key_getter(item);
+        this.map.set(key, item);
+      }
+    }
+    async exist(item) {
+      const key = this.key_getter(item);
+      return this.key_exist(key);
+    }
+    async key_exist(key) {
+      await this.ensureCacheBuilt();
+      return this.map.has(key);
+    }
+    async get(key) {
+      await this.ensureCacheBuilt();
+      return this.map.get(key);
+    }
+  };
   var Cache = class {
     constructor(loader) {
       this.cache = null;
@@ -2600,18 +2706,21 @@
     updateHistory: async function(value) {
       await this.set("pfHistory", value);
     },
-    _weakCachedBlacklist: new Cache(async function() {
-      let blockedUsers = (await myStorage.getConfig())["blockedUsers"];
-      return new Map(blockedUsers ? blockedUsers.map((user) => [user.id, user]) : /* @__PURE__ */ new Map());
-    }),
-    getWeakCachedBlacklist: async function() {
-      return this._weakCachedBlacklist.get();
+    _weakCachedBlacklist: new BlacklistCache(
+      (user) => user.id,
+      async () => {
+        const blockedUsers = (await myStorage.getConfig())["blockedUsers"] || [];
+        return blockedUsers;
+      }
+    ),
+    getWeakCachedBlacklist: function() {
+      return this._weakCachedBlacklist;
     },
     clearWeakCachedBlacklist: async function() {
-      this._weakCachedBlacklist.invalidate();
+      await this._weakCachedBlacklist.rebuild();
     },
     getBlacklistedDude: async function(userId) {
-      return (await this.getWeakCachedBlacklist()).get(userId);
+      return await this.getWeakCachedBlacklist().get(userId);
     }
   };
   function throttle(fn, time = 300) {
