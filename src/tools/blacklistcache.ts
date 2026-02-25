@@ -3,6 +3,7 @@ import { BloomFilter } from './bloom-filter';
 export class BlacklistCache<T = any> {
   private map: Map<string, T> | null = null;
   private bloom: BloomFilter | null = null;
+  //暂时无需布隆过滤器，对其的操作已注释
 
   // 函数变量（在构造函数当中传入并赋值）
   private key_getter: (item: T) => string;
@@ -37,7 +38,7 @@ export class BlacklistCache<T = any> {
   public async add(item: T): Promise<void> {
     await this.ensureCacheBuilt();
     const key = this.key_getter(item);
-    this.bloom!.add(key);
+    //this.bloom!.add(key);
     this.map!.set(key, item);
   }
 
@@ -76,7 +77,7 @@ export class BlacklistCache<T = any> {
     // 将所有元素添加到缓存中
     for (const item of allItems) {
       const key = this.key_getter(item);
-      this.bloom.add(key);
+      //this.bloom.add(key);
       this.map.set(key, item);
     }
   }
@@ -100,9 +101,9 @@ export class BlacklistCache<T = any> {
   public async key_exist(key: string): Promise<boolean> {
     await this.ensureCacheBuilt();
     // 先用布隆过滤器快速判断
-    if (!this.bloom!.mightContain(key)) {
-      return false; // 一定不存在
-    }
+    // if (!this.bloom!.mightContain(key)) {
+    //   return false; // 一定不存在
+    // }
 
     // 布隆过滤器说可能存在，需要在map中确认
     return this.map!.has(key);
@@ -113,7 +114,7 @@ export class BlacklistCache<T = any> {
    * @param key 要查找的key
    * @returns 对应的元素，如果不存在则返回undefined
    */
-  public async key_get(key: string): Promise<T | undefined> {
+  public async get(key: string): Promise<T | undefined> {
     await this.ensureCacheBuilt();
     return this.map!.get(key);
   }

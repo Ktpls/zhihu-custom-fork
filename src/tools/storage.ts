@@ -1,6 +1,9 @@
 import { SAVE_HISTORY_NUMBER } from '../config';
 import { IPfConfig, IPfHistory } from '../config/types';
+import { BlacklistCache } from './blacklistcache';
 import { Cache } from './cache';
+
+
 /** 使用 localStorage + GM 存储，解决跨域存储配置不同的问题 */
 export const myStorage = {
   set: async function (name: string, value: Record<string, any>) {
@@ -57,17 +60,21 @@ export const myStorage = {
   updateHistory: async function (value: IPfHistory) {
     await this.set('pfHistory', value);
   },
-  _weakCachedBlacklist: new Cache<Map<string, any>>(async function (): Promise<Map<string, any>> {
-    let blockedUsers = (await myStorage.getConfig())['blockedUsers'];
-    return new Map(blockedUsers ? blockedUsers.map((user: { id: string; }) => [user.id, user]) : new Map());
-  }),
-  getWeakCachedBlacklist: async function () {
-    return this._weakCachedBlacklist.get();
+  _weakCachedBlacklist: new BlacklistCache<{ id: string }>(
+    (user) => user.id,
+    async (): Promise<{ id: string }[]> => {
+      const blockedUsers: { id: string }[] = (await myStorage.getConfig())['blockedUsers'] || [];
+      return blockedUsers;
+    }
+  ),
+  getWeakCachedBlacklist: function () {
+    return this._weakCachedBlacklist;
   },
   clearWeakCachedBlacklist: async function () {
-    this._weakCachedBlacklist.invalidate();
+    // BlacklistCache 没有 invalidate 方法，但 rebuild 会清空并重新加载
+    await this._weakCachedBlacklist.rebuild();
   },
   getBlacklistedDude: async function (userId: string | null | undefined) {
-    return (await this.getWeakCachedBlacklist()).get(userId)
+    return await this.getWeakCachedBlacklist().get(userId)
   },
 };
