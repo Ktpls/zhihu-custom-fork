@@ -1839,15 +1839,6 @@
       if (!message2 && removeItemQuestionAsk && nodeItem.querySelector(".TopstoryQuestionAskItem")) {
         message2 = "屏蔽邀请回答";
       }
-      if (!message2 && blockAnswerShorterThanThreshOnList > 0) {
-        const domRichContent = nodeItem.querySelector(".RichContent");
-        if (domRichContent) {
-          const innerText = domRichContent.innerText || "";
-          if (innerText.length < blockAnswerShorterThanThreshOnList) {
-            message2 = `屏蔽短内容: ${title}, ${innerText.length}字符`;
-          }
-        }
-      }
       !message2 && (message2 = replaceBlockWord(title, nodeContentItem, filterKeywords, title, "标题"));
       if (!message2) {
         const domRichContent = nodeItem.querySelector(".RichContent");
@@ -1855,6 +1846,12 @@
         message2 = replaceBlockWord(innerText, nodeContentItem, blockWordsAnswer, title, "内容");
       }
       if (message2) {
+        const titleElm = nodeItem.querySelector(".ContentItem-title");
+        if (titleElm) {
+          const titleUrl = titleElm.querySelector('[itemprop="url"]')?.getAttribute("content");
+          const answerUrl = titleElm.querySelector('[data-za-detail-view-element_name="Title"]')?.getAttribute("href");
+          message2 = message2 + "\n问题" + titleUrl + "\n回答" + answerUrl;
+        }
         fnHidden(nodeItem, message2);
         const { itemId: itemId2, type } = dataZop;
         doFetchNotInterested({ id: `${itemId2 || ""}`, type: `${type}` });

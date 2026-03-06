@@ -58,7 +58,7 @@ export const processingData = async (nodes: NodeListOf<HTMLElement>) => {
     try {
       dataZop = JSON.parse(nodeContentItem.getAttribute('data-zop') || '{}');
       cardContent = JSON.parse(nodeContentItem.getAttribute('data-za-extra-module') || '{}').card.content;
-    } catch {}
+    } catch { }
     const { title = '', itemId } = dataZop || {};
     // 未隐藏的元素需添加的内容
     /** 存在 .FeedSource 元素为关注列表内容 */
@@ -70,7 +70,7 @@ export const processingData = async (nodes: NodeListOf<HTMLElement>) => {
           const findUserId = (nodeItem.querySelector('.UserLink .UserLink-link') as HTMLAnchorElement).href.match(/[^\/]+$/)![0];
           const myUserId = userInfo!.url.match(/[^\/]+$/)![0];
           findUserId === myUserId && (message = '关注列表屏蔽自己的操作');
-        } catch {}
+        } catch { }
       }
 
       // 关注人操作
@@ -113,16 +113,16 @@ export const processingData = async (nodes: NodeListOf<HTMLElement>) => {
       message = '屏蔽邀请回答';
     }
 
-    // 屏蔽短内容
-    if (!message && blockAnswerShorterThanThreshOnList > 0) {
-      const domRichContent = nodeItem.querySelector('.RichContent');
-      if (domRichContent) {
-        const innerText = (domRichContent as HTMLElement).innerText || '';
-        if (innerText.length < blockAnswerShorterThanThreshOnList) {
-          message = `屏蔽短内容: ${title}, ${innerText.length}字符`;
-        }
-      }
-    }
+    // // 屏蔽短内容
+    // if (!message && blockAnswerShorterThanThreshOnList > 0) {
+    //   const domRichContent = nodeItem.querySelector('.RichContent');
+    //   if (domRichContent) {
+    //     const innerText = (domRichContent as HTMLElement).innerText || '';
+    //     if (innerText.length < blockAnswerShorterThanThreshOnList) {
+    //       message = `屏蔽短内容: ${title}, ${innerText.length}字符`;
+    //     }
+    //   }
+    // }
 
     // 标题屏蔽词过滤
     !message && (message = replaceBlockWord(title, nodeContentItem, filterKeywords, title, '标题'));
@@ -135,6 +135,13 @@ export const processingData = async (nodes: NodeListOf<HTMLElement>) => {
 
     if (message) {
       // 是否需要隐藏元素
+      const titleElm = nodeItem.querySelector('.ContentItem-title');
+      if (titleElm) {
+        //查询titleElm里itemprop="url"的meta标签的content属性
+        const titleUrl = titleElm.querySelector('[itemprop="url"]')?.getAttribute('content');
+        const answerUrl = titleElm.querySelector('[data-za-detail-view-element_name="Title"]')?.getAttribute('href');
+        message = message + '\n问题' + titleUrl + '\n回答' + answerUrl;
+      }
       fnHidden(nodeItem, message);
       const { itemId, type } = dataZop;
       doFetchNotInterested({ id: `${itemId || ''}`, type: `${type}` });
