@@ -140,6 +140,8 @@ export interface IConfigHidden {
   hiddenHomeCategoryMore?: boolean;
   /** 隐藏主页知乎指南 */
   hiddenHomeFooter?: boolean;
+  /** 隐藏主页大家都在搜 */
+  hiddenHomeHotSearch?: boolean;
   /** 隐藏回答内容操作栏 */
   hiddenAnswerItemActions?: boolean;
   /** 隐藏回答下方发布编辑时间 */
@@ -245,6 +247,12 @@ export interface IConfigHidden {
   hiddenThanksInvite?: boolean;
   /** 隐藏首页分享想法模块 */
   hiddenHomeWriteArea?: boolean;
+  /** 问答页面信息栏 - 大家都在搜 */
+  hiddenAnswerRightHotSearchCard?: boolean;
+  /** 隐藏选中文字后的弹窗模块 */
+  hiddenSelectedTextPopup?: boolean;
+  /** 专栏大家都在搜 */
+  hiddenZhuanlanHotSearchCard?: boolean;
 }
 
 /** 屏蔽内容模块默认配置 */
@@ -331,6 +339,17 @@ export interface IConfigSuspension {
   suspensionOpenTop?: string;
   suspensionOpenUseLeft?: boolean;
   suspensionOpenUseTop?: boolean;
+  /** 菜单栏切换模块悬浮 */
+  suspensionSwitch?: boolean;
+  /** 菜单栏切换模块悬浮定位 */
+  suspensionSwitchPo?: string;
+  /** 菜单栏切换模块悬浮是否固定 */
+  // suspensionSwitchFixed?: boolean;
+  suspensionSwitchFollow?: boolean;
+  suspensionSwitchDefault?: boolean;
+  suspensionSwitchHot?: boolean;
+  suspensionSwitchColumnSquare?: boolean;
+  suspensionSwitchRingFeeds?: boolean;
 }
 
 /** 配置参数 */
@@ -457,7 +476,7 @@ export interface IPfConfig extends IConfigHidden, IConfigFilter, IConfigSuspensi
   /** 回答页高性能模式 */
   highPerformanceAnswer?: boolean;
   /** 评论图片预览不超出页面 */
-  commentImageFullPage?: boolean;
+  // commentImageFullPage?: boolean;
   /** 取消评论输入框自动聚焦 */
   cancelCommentAutoFocus?: boolean;
   /** 键盘ESC键关闭评论弹窗 */

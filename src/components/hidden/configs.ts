@@ -22,6 +22,13 @@ const HIDDEN_ITEM_COMMON: IHiddenItem = {
     ],
     [
       {
+        label: '隐藏选中文字后的弹窗模块',
+        value: 'hiddenSelectedTextPopup',
+        css: '.css-s3a8u1{display: none!important;}',
+      }
+    ],
+    [
+      {
         label: 'LOGO',
         value: 'hiddenLogo',
         css: '.ZhihuLogoLink,.TopTabNavBar-logo-3d0k,[aria-label="知乎"],.TopNavBar-logoContainer-vDhU2,.zu-top-link-logo{display: none!important;}',
@@ -64,6 +71,11 @@ const HIDDEN_ITEM_COMMON: IHiddenItem = {
         css: '.AppHeader a[href="https://www.zhihu.com/column-square"]{display:none}',
       },
       {
+        label: '顶部菜单栏 - 圈子',
+        value: 'hiddenHeaderColumnRingFeeds',
+        css: '.AppHeader a[href="https://www.zhihu.com/ring-feeds"]{display:none}',
+      },
+      {
         label: '顶部菜单栏 - 付费咨询',
         value: 'hiddenHeaderConsult',
         css: '.AppHeader a[href="https://www.zhihu.com/consult"]{display:none}',
@@ -76,7 +88,7 @@ const HIDDEN_ITEM_COMMON: IHiddenItem = {
       {
         label: '顶部菜单栏 - 直答',
         value: 'hiddenHeaderZhida',
-        css: '.AppHeader a[href="https://www.zhihu.com/zhida"]{display:none}',
+        css: '.AppHeader a[href="https://zhida.zhihu.com/"]{display:none}',
       },
 
       // {
@@ -257,6 +269,11 @@ const HIDDEN_ITEM_LIST: IHiddenItem = {
         value: 'hiddenHomeFooter',
         css: '.Topstory .Footer,.Topstory footer{display: none;}',
       },
+      {
+        label: '大家都在搜',
+        value: 'hiddenHomeHotSearch',
+        css: '.Topstory .HotSearchCard{display: none;}',
+      }
     ],
     [
       {
@@ -420,7 +437,7 @@ const HIDDEN_ITEM_ANSWER: IHiddenItem = {
       {
         label: '问题写回答按钮',
         value: 'hiddenQuestionAnswer',
-        css: '.QuestionHeader .FollowButton ~ a{display: none;}',
+        css: '.QuestionHeader .FollowButton ~ button{display: none;}',
       },
       {
         label: '问题邀请回答按钮',
@@ -513,6 +530,11 @@ const HIDDEN_ITEM_ANSWER: IHiddenItem = {
         value: 'hidden618HongBao',
         css: '.MCNLinkCard[data-mcn-source="淘宝"],.MCNLinkCard[data-mcn-source="京东"],.MCNLinkCard[data-mcn-source="知乎"]{display:none;}',
       },
+      {
+        label: '回答内容底部热评',
+        value: 'hiddenAnswerBottomComment',
+        css: '.css-7v0dz0{display: none!important;}',
+      },
     ],
     [
       {
@@ -521,29 +543,34 @@ const HIDDEN_ITEM_ANSWER: IHiddenItem = {
         css: '.Question-sideColumn{display: none!important;}.Question-main .Question-mainColumn,.ListShortcut{width: inherit;}',
       },
       {
-        label: '问答页面信息栏关于作者',
+        label: '问答页面信息栏 - 关于作者',
         value: 'hiddenAnswerRightFooterAnswerAuthor',
         css: '.Question-sideColumn .AnswerAuthor{display: none;}',
       },
       {
-        label: '问答页面信息栏被收藏次数',
+        label: '问答页面信息栏 - 被收藏次数',
         value: 'hiddenAnswerRightFooterFavorites',
         css: '.Question-sideColumn .AnswerAuthor + .Card{display: none;}',
       },
       {
-        label: '问答页面信息栏相关问题',
+        label: '问答页面信息栏 - 相关问题',
         value: 'hiddenAnswerRightFooterRelatedQuestions',
         css: '.Question-sideColumn [data-za-detail-view-path-module="RelatedQuestions"]{display: none;}',
       },
       {
-        label: '问答页面信息栏相关推荐',
+        label: '问答页面信息栏 - 相关推荐',
         value: 'hiddenAnswerRightFooterContentList',
         css: '.Question-sideColumn [data-za-detail-view-path-module="ContentList"]{display: none;}',
       },
       {
-        label: '问答页面信息栏知乎指南',
+        label: '问答页面信息栏 - 知乎指南',
         value: 'hiddenAnswerRightFooterFooter',
-        css: '.Question-sideColumn .Footer{display: none;}',
+        css: '.Question-sideColumn footer{display: none;}',
+      },
+      {
+        label: '问答页面信息栏 - 大家都在搜',
+        value: 'hiddenAnswerRightHotSearchCard',
+        css: '.Question-sideColumn .HotSearchCard{display: none;}',
       },
     ],
   ],
@@ -618,6 +645,11 @@ const HIDDEN_ITEM_ARTICLE: IHiddenItem = {
         label: '关于作者',
         value: 'hiddenZhuanlanAuthorCard',
         css: '.zhuanlan .Card.AuthorCard{display:none}',
+      },
+      {
+        label: '大家都在搜',
+        value: 'hiddenZhuanlanHotSearchCard',
+        css: '.zhuanlan .HotSearchCard{display:none}',
       },
     ],
   ],
@@ -774,7 +806,7 @@ export const HIDDEN_ARRAY_MORE = [
     value: '[data-za-detail-view-path-module="TopicItem"]>div:nth-child(2){display: none;}',
   },
   {
-    keys: ['hiddenZhuanlanAuthorCard', 'hiddenAD'],
-    value: '.zhuanlan .Post-Row-Content-right{display:none;}',
+    keys: ['hiddenHeaderEducationLearning', 'hiddenHeaderConsult'],
+    value: '.AppHeader .css-53paqb{display: none;}',
   },
 ];

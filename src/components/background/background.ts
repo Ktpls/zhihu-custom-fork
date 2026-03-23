@@ -58,7 +58,7 @@ const cssBackground = (background1: string, background2: string) =>
   `${NAME_BACKGROUND_2}{background-color:${background2}!important;background:${background2}!important;}` +
   `${NAME_BACKGROUND_TRANSPARENT}{background-color: transparent!important;background: transparent!important;}`;
 
-/** 使用背景色1的元素名称 */
+/** 使用背景色1的元素名称 - 底色背景 */
 const NAME_BACKGROUND_1 =
   `body,.Input-wrapper,.toolbar-section button:hover,.PostItem` +
   `,.VideoAnswerPlayer-stateBar,.skeleton,.Community-ContentLayout` +
@@ -73,6 +73,7 @@ const NAME_BACKGROUND_1 =
   `,.Creator-salt-new-author-menu .Creator-salt-new-author-route .ant-menu-submenu-title:hover` +
   `,.Creator-salt-new-author-menu .Creator-salt-new-author-route .ant-menu-item:hover,.index-learnPath-dfrcu .index-learnContainer-9QR37 .index-learnShow-p3yvw .index-learnCard-vuCza,.index-courseCard-ebw4r` +
   `,[class^="index-goodCourseCard-"]` +
+  `,.css-m0zh86,.css-1503iqi,.css-wqf2py:hover,.css-1kxql2v,.css-jjc8wi,.css-1gtqxw0,.css-19bjnr2:hover,.css-kwaq2d:hover,.css-1b31wiw:hover,.css-2sopzd,.css-34mzkj,.css-13ev0i:hover` +
   // `,.css-13ev0i:hover,.css-oqi8p3 .lazy[data-lazy-status]` +
   `,${appendClassStart('Tabs-container,EpisodeList-sectionItem')}`;
 
@@ -105,8 +106,12 @@ const NAME_BACKGROUND_2 =
   `,.Topstory-container .TopstoryTabs>a::after,.ZVideo,.KfeCollection-CreateSaltCard,.CreatorSalt-personalInfo,.CreatorSalt-sideBar-item,.css-d1sc5t,.css-1gvsmgz,.css-u56wtg,.css-1hrberl` +
   `,.CreatorSalt-community-story-wrapper .CreatorSalt-community-story-header,.ant-table-tbody>tr>td,.CreatorSalt-management-wrapper .CreatorSalt-management-search,.ant-table-thead .ant-table-cell` +
   `,.QuestionWaiting-typesTopper,.SearchSubTabs,.ContentItem-actions.Sticky.is-fixed button[data-zop-retract-question='true'],.Post-Row-Content-left,.hot-column-container,.recommend-column,.hot-column,.more-container` +
+  `,.HotSearchCard,.WriteArea>div,.Creator-mainColumn .Card>div>div,.css-qd51c>div:not(.css-13gd32n),.ant-modal-content` +
+  `,.css-1e6hvbc,.css-17pkp3f,.css-kt4t4n,.css-u3vsx3,.css-7v0dz0,.css-1ur5o1n,.css-1503iqi,.css-i9srcr,.css-vpzinw,.css-hdz1a3,.css-1q65fkr,.css-127i0sx,.css-ej3ubf,.css-mv0sgu,.css-qbngl8,.css-1na61gt,.css-h4qwk4,.css-14wefvy>div` +
+  `,.css-tzviga,.css-1e31h8y,.css-13uu85k,.css-16t5hun,.css-nnul91,.css-rt4ywx,.css-ov3mmw,.css-3zr8ne,.css-lxxesj,.css-zylli3,.css-erbxwb,.css-1dja9sh,.css-7b4wc9,.css-1xvgm7g,.css-1ta275q,.css-1ta275q>div` +
+  `,.css-1oqbvad,.css-44kk6u,.css-1pariuy,.css-ksdfxq,.css-b0g50k,.css-3dzt4y` +
   // `,.css-4jezjh,.css-1xj1964,.css-ggid2,.css-10kzyet,.css-ep38sv,.css-b0g50k,.css-w0en9j,.css-14pitda,.css-15dztar,.css-1gkysn8,.css-97fdvh>div,.css-4lspwd,.css-1e6hvbc,.css-k32okj,.css-1b0ypf8 div,.css-np3nxw div,.css-1i12cbe` +
-  `,[class^="css-"]:not(.css-1ndlr1n,.css-1gomreu,.css-5ym188,.css-19q29v6,.css-1qyytj7,.css-2pfapc,.css-uq1pv2,.css-1khcilw,.css-i9srcr,.css-pu97ow,.css-74nox5)` +
+  // `,[class^="css-"]:not(.css-1ndlr1n,.css-1gomreu,.css-5ym188,.css-19q29v6,.css-1qyytj7,.css-2pfapc,.css-uq1pv2,.css-1khcilw,.css-i9srcr,.css-pu97ow,.css-74nox5)` +
   `,[class6="index-goodCourseCardContainer"]` +
   `,${appendClassStart(
     'App-root,PcContent-root,TopNavBar-root,CourseConsultation-corner,CourseConsultation-cornerButton,CornerButtonToTop-cornerButton,LearningRouteCard-pathContent,index-item,index-hoverCard,ShelfTopNav-root' +
@@ -116,13 +121,13 @@ const NAME_BACKGROUND_2 =
 
 /** 透明背景色的元素名称 */
 const NAME_BACKGROUND_TRANSPARENT =
-  `.zhuanlan .Post-content .RichContent-actions.is-fixed,.AnnotationTag,.ProfileHeader-wrapper,.css-1ggwojn,.css-3dzt4y,.css-u4sx7k` +
+  `,.zhuanlan .Post-content .RichContent-actions.is-fixed,.AnnotationTag,.ProfileHeader-wrapper,.css-1ggwojn,.css-3dzt4y,.css-u4sx7k,#CTZ_SUSPENSION_SWITCH>a,#CTZ_SUSPENSION_SWITCH>a:hover` +
   `,.VideoPlaceholderContainer>section,.MoreAnswers .List-headerText,.ColumnHomeTop:before,.ColumnHomeBottom,.Popover button:not(.SearchBar-askDropdownButton),.ChatUserListItem .Chat-ActionMenuPopover-Button` +
-  `,#root .App-main footer.css-2pfapc div,#root .App-main footer.css-2pfapc a,#root .css-ov3mmw *,#root .css-g9qnka *,#root .css-74nox5 *,#root .css-s5fc8s>.card *`;
+  `,#root .App-main footer.css-2pfapc div,#root .App-main footer.css-2pfapc a,#root .css-ov3mmw *,#root .css-g9qnka *,#root .css-74nox5 *,#root .css-s5fc8s>.card *,.WriteIndexMain>div, .Popover-content>div,.css-ysdf4p>div`;
 
 /** 黑夜模式下的白色字体元素名称 */
 const DARK_NAME_COLOR_WHITE =
-  `.${CLASS_MESSAGE},.ctz-export-collection-box p` +
+  `.${CLASS_MESSAGE},.ctz-export-collection-box p,#CTZ_SUSPENSION_SWITCH>a` +
   `,.Modal-content,.Modal-content div,.Menu-item.is-active,.Select-list button:active,.Select-list button:hover,.Popover-content button,.Modal-title` +
   `,.zu-main div,.modal-dialog,.zh-profile-card div,.QuestionAnswers-answerAdd div,.QuestionAnswers-answerAdd label,.Tabs-link,.toolbar-section button,.Modal-modal-wf58 div` +
   // `,.css-yd95f6,.css-g9ynb2,.css-i9srcr,.css-i9srcr div,.css-arjme8 div,.css-arjme8 label,.css-arjme8 h1,.css-13brsx3,.css-1ta275q div` +
@@ -133,11 +138,11 @@ const DARK_NAME_COLOR_WHITE =
   `,.aria-primary-color-style.aria-secondary-background,.aria-primary-color-style.aria-secondary-background div,.aria-primary-color-style.aria-secondary-background h1,.aria-primary-color-style.aria-secondary-background a,.aria-primary-color-style.aria-secondary-background p,.aria-primary-color-style.aria-secondary-background h2` +
   `,#feedLives div,#feedLives a,.Card-card-2K6v,.Card-card-2K6v div,.Card-card-2K6v h3,._Invite_container_30SP h2,._Invite_container_30SP h1,.ChatListGroup-SectionTitle .Zi,.Qrcode-container>div,.Qrcode-guide-message>div,.signQr-leftContainer button,.signQr-leftContainer a` +
   `,.ExploreHomePage-square div,.ExploreHomePage-square a,.jsNavigable a,#TopstoryContent h2,[role="contentinfo"] div` +
-  `,.CreatorSalt-personalInfo-name,.ant-collapse>.ant-collapse-item>.ant-collapse-header` +
+  `,.CreatorSalt-personalInfo-name,.ant-collapse>.ant-collapse-item>.ant-collapse-header,.ant-modal-content,.ant-modal-confirm-body .ant-modal-confirm-content` +
   // `,.css-10u695f,.css-wqf2py,.css-wmwsyx,.css-wmwsyx div,.css-c3gbo3,.css-1ygg4xu blockquote,.css-r8ate4,.css-1e1wubc,.css-1e1wubc div,.css-12kq1qx,.css-172osot div,.css-172osot a:last-child,.css-f2jj4r` +
   `,.Creator-salt-new-author-menu .Creator-salt-new-author-route .ant-menu-submenu-title:hover,.Creator-salt-author-welfare .Creator-salt-author-welfare-card h1` +
   // `,.css-u56wtg,.css-1hrberl,.css-13e6wvn,.css-i0heim,.css-1lkz3hi,.css-18i781m,.css-13ev0i,.css-44m30e:hover,.css-1f1pohe,.css-44m30e,.css-16zsfw9,.css-1wv2vrq,.css-110m3t7,.css-nklvh9,.css-ukbjm6,.css-1oml8kn,.css-1w0yveu` +
-  `,.CommentContent,.css-1j6g1cv > span, .css-1j6g1cv > div` +
+  `,.CommentContent,.css-1j6g1cv > span, .css-1j6g1cv > div,blockquote` +
   `,[class^="css-"],[class^="index-descInfo"],[class^="TopNavBar-tab-"] a` +
   `,${appendClassStart(
     'index-title,CourseConsultation-tip,index-text,index-number,CourseDescription-playCount,LecturerList-title,LearningRouteCard-title,index-tabItemLabel,VideoCourseCard-module,TextTruncation-module'
@@ -148,10 +153,11 @@ const DARK_NAME_COLOR_BLACK = `css-1x3upj1,.PlaceHolder-inner,.PlaceHolder-mask 
 
 /** 黑夜模式下浅蓝色超链接字体 */
 const DARK_NAME_COLOR_LIGHT_LINK =
-  `.css-1esjagr,.css-ruirke,.css-117anjg a.UserLink-link,.RichContent--unescapable.is-collapsed .ContentItem-rightButton,.css-1qap1n7,.ContentItem-more` +
+  `.ctz-zhida` +
+  `,.css-1esjagr,.css-ruirke,.css-117anjg a.UserLink-link,.RichContent--unescapable.is-collapsed .ContentItem-rightButton,.css-1qap1n7,.ContentItem-more` +
   `,.ContentItem-title a:hover,.Profile-lightItem:hover,.Profile-lightItem:hover .Profile-lightItemValue,.css-p54aph:hover,.PushNotifications-item a:hover,.PushNotifications-item a` +
   `,.NotificationList-Item-content .NotificationList-Item-link:hover,.SettingsQA a,a.QuestionMainAction:hover,.SimilarQuestions-item .Button,.CreatorSalt-IdentitySelect-Button` +
   `,.signQr-leftContainer button:hover,.signQr-leftContainer a:hover,.Profile-sideColumnItemLink:hover,.FollowshipCard-link,.css-zzimsj:hover,.css-vphnkw,.css-1aqu4xd,.css-6m0nd1` +
   `,.NumberBoard-item.Button:hover .NumberBoard-itemName, .NumberBoard-item.Button:hover .NumberBoard-itemValue, .NumberBoard-itema:hover .NumberBoard-itemName, .NumberBoard-itema:hover .NumberBoard-itemValue` +
   `,a.external,.RichContent-EntityWord,.SideBarCollectionItem-title,.Tag-content,.LabelContainer div,.LabelContainer a,.KfeCollection-OrdinaryLabel-newStyle-mobile .KfeCollection-OrdinaryLabel-content,.KfeCollection-OrdinaryLabel-newStyle-pc .KfeCollection-OrdinaryLabel-content` +
-  `,.KfeCollection-CreateSaltCard-button,.KfeCollection-PcCollegeCard-searchMore,.css-15m2p8i > a:hover`;
+  `,.KfeCollection-CreateSaltCard-button,.KfeCollection-PcCollegeCard-searchMore,.css-15m2p8i > a:hover,#CTZ_SUSPENSION_SWITCH>a:hover`;

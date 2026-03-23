@@ -61,6 +61,14 @@ export const CONFIG_SUSPENSION: IConfigSuspension = {
   // suspensionUserFixed: true,
   suspensionPickUp: true,
   suspensionPickupRight: 0,
+  suspensionSwitch: false,
+  suspensionSwitchPo: 'left: 20px; top: 380px;',
+  // suspensionSwitchFixed: true,
+  suspensionSwitchFollow: true,
+  suspensionSwitchDefault: true,
+  suspensionSwitchHot: true,
+  suspensionSwitchColumnSquare: true,
+  suspensionSwitchRingFeeds: true,
 };
 
 /** 极简模式配置 */
@@ -116,6 +124,7 @@ export const CONFIG_SIMPLE: IPfConfig = {
   hiddenHomeCategory: true,
   hiddenHomeCategoryMore: true,
   hiddenHomeFooter: true,
+  hiddenHomeHotSearch: true,
   removeFromYanxuan: true,
   removeUnrealAnswer: false,
   removeFollowVoteAnswer: false,
@@ -229,7 +238,7 @@ export const CONFIG_DEFAULT: IPfConfig = {
   suspensionOpen: ESuspensionOpen.左右,
   showBlockUserCommentTag: true,
   showBlockUserTag: true,
-  commentImageFullPage: true,
+  // commentImageFullPage: true,
   keyEscCloseCommentDialog: true,
   replaceZhidaToSearch: EReplaceZhidaToSearch.不替换,
   videoInAnswerArticle: EVideoInAnswerArticle.默认,
