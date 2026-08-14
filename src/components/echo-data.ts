@@ -1,12 +1,12 @@
 import { CLASS_INPUT_CHANGE, CLASS_INPUT_CLICK } from '../misc';
 import { dom, domA, domById, myStorage } from '../tools';
-import { echoBlockedContent } from './black-list';
+import { changeReplaceBlockUserSwitchDisabled, echoBlockedContent } from './black-list';
 import { echoMySelect } from './select';
 import { VERSION_RANGE_HAVE_PERCENT } from './size';
 
 /** 回填数据，供每次打开使用 */
 export const echoData = async () => {
-  const config = await myStorage.getConfig();
+  const config = await myStorage.getConfig(true);
   const textSameName: Record<string, Function> = {
     globalTitle: (e: HTMLInputElement) => (e.value = config.globalTitle || document.title),
     customizeCss: (e: HTMLInputElement) => (e.value = config.customizeCss || ''),
@@ -52,6 +52,7 @@ export const echoData = async () => {
   });
 
   echoMySelect();
+  changeReplaceBlockUserSwitchDisabled(config.replaceBlockUserContentWithStar);
   // 回填（渲染）黑名单内容应在 echoData 中设置，保证每次打开弹窗都是最新内容
   echoBlockedContent(document.body);
 };

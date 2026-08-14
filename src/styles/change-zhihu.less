@@ -51,7 +51,9 @@ body[data-suspension-pickup='true'] {
       bottom: 50px;
       background: #fff;
       padding: 6px 12px;
-      box-shadow: 0px 2px 8px #c9c9c9, 0px -2px 8px #ffffff;
+      box-shadow:
+        0px 2px 8px #c9c9c9,
+        0px -2px 8px #ffffff;
       border-radius: 8px;
     }
   }
@@ -65,26 +67,18 @@ body[data-suspension-pickup='true'] {
 }
 
 // 回答详情页面内容宽度优化
-.Question-main .Question-mainColumn,
+.QuestionPage .Question-mainColumn,
 .QuestionHeader-main {
   flex: 1;
 }
 
-.Question-main {
+.QuestionPage {
   padding: 0;
   .List-item {
     border-bottom: 1px dashed #ddd;
   }
-  .Question-sideColumn {
-    margin-left: 12px;
-    width: auto;
-  }
-
-  .ListShortcut {
-    flex: 1;
-    .Question-mainColumn {
-      width: initial;
-    }
+  .Question-mainColumn {
+    width: initial;
   }
 }
 
@@ -134,7 +128,14 @@ body[data-suspension-pickup='true'] {
   .css-44kk6u {
     max-width: none;
   }
-  .css-9w3zhd {
+  .css-9w3zhd,
+  .css-12tmx22,
+  .css-1bcbfml {
     width: auto;
   }
+}
+
+// 知乎圈子兼容
+.Topstory-content > div {
+  width: auto !important;
 }

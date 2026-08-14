@@ -26,8 +26,10 @@ export interface IConfigHidden {
   hiddenLogo?: boolean;
   /** 隐藏header */
   hiddenHeader?: boolean;
-  /** 隐藏顶部滚动header */
-  hiddenHeaderScroll?: boolean;
+  /** 付费咨询 */
+  hiddenHomePayAsk?: boolean;
+  // /** 隐藏顶部滚动header */
+  // hiddenHeaderScroll?: boolean;
   /** 隐藏列表回答操作 */
   hiddenItemActions?: boolean;
   /** 隐藏列表回答操作栏 - 底部悬浮 */
@@ -393,8 +395,16 @@ export interface IPfConfig extends IConfigHidden, IConfigFilter, IConfigSuspensi
   globalTitle?: string;
   /** 网页标题logo图 */
   titleIco?: string;
-  /** 内容标题添加类别标签 */
+  /** 内容标题添加类别标签（旧配置，迁移保留） */
   questionTitleTag?: boolean;
+  /** 列表标题类别显示「问题」 */
+  listTitleTagQuestion?: boolean;
+  /** 列表标题类别显示「文章」 */
+  listTitleTagArticle?: boolean;
+  /** 列表标题类别显示「视频」 */
+  listTitleTagVideo?: boolean;
+  /** 列表标题类别显示「想法」 */
+  listTitleTagPin?: boolean;
   /** 列表更多按钮固定至题目右侧 */
   fixedListItemMore?: boolean;
   /** 关注列表高亮原创内容 */

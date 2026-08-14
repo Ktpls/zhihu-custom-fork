@@ -1,7 +1,19 @@
 import { CLASS_ZHIHU_COMMENT_DIALOG } from '../misc';
 import { store } from '../store';
 import { CTZ_HIDDEN_ITEM_CLASS, dom, domA, domC, domP, fnLog, myStorage } from '../tools';
-import { addBlockUser, changeBlockedUsersBox, CLASS_BLOCK_USER_BOX, CLASS_BTN_ADD_BLOCKED, CLASS_BTN_REMOVE_BLOCKED, IBlockedUser, removeBlockUser } from './black-list';
+import {
+  addBlockUser,
+  changeBlockedUsersBox,
+  CLASS_BLOCK_USER_BOX,
+  CLASS_BTN_ADD_BLOCKED,
+  CLASS_BTN_REMOVE_BLOCKED,
+  createBlockedUserTagHTML,
+  BLOCKED_USER_LIST_TYPE,
+  findBlockedUserWithType,
+  IBlockedUser,
+  removeBlockUser,
+  removeItemAfterBlock,
+} from './black-list';
 
 /** 格式化评论区接口内的用户信息并储存 */
 export const formatCommentAuthors = (data: any[]) => {
@@ -89,8 +101,27 @@ export const doListenComment = async () => {
 };
 
 const ATTR_ID = 'data-id';
+const CLASS_BLOCKED_CONTENT_REPLACEMENT = 'ctz-blocked-content-replacement';
+const BLOCKED_CONTENT_REPLACEMENT_TEXT = `<span class="ctz-blocked-content-replacement-text">***</span>`;
 
 const buttonListener = () => setTimeout(doListenComment, 500);
+
+const getUserIdFromPeopleLink = (href: string) => {
+  try {
+    return new URL(href, location.origin).pathname.replace(/^\/people\//, '').replace(/\/$/, '');
+  } catch {
+    return href.replace(/[\w\W]+\/people\//, '').replace(/[?#][\w\W]*$/, '').replace(/\/$/, '');
+  }
+};
+
+const replaceBlockedCommentContent = (item: HTMLElement, commentBoxClass: string, blockedUser: IBlockedUser, showBlockUserTagType?: boolean) => {
+  const commentBox = item.querySelector(commentBoxClass) as HTMLElement | null;
+  const commentContent = ((commentBox && commentBox.querySelector('.CommentContent')) || item.querySelector('.CommentContent')) as HTMLElement | null;
+  if (!commentContent || commentContent.classList.contains(CLASS_BLOCKED_CONTENT_REPLACEMENT)) return;
+  commentContent.innerHTML = BLOCKED_CONTENT_REPLACEMENT_TEXT + createBlockedUserTagHTML(showBlockUserTagType, blockedUser);
+  commentContent.classList.add(CLASS_BLOCKED_CONTENT_REPLACEMENT);
+  fnLog('已将黑名单用户的评论替换为 ***，' + `${blockedUser.name}`);
+};
 
 /** 处理评论 */
 const formatComments = async (nodeComments?: HTMLElement, commentBoxClass = '.css-jp43l4') => {
@@ -103,7 +134,8 @@ const formatComments = async (nodeComments?: HTMLElement, commentBoxClass = '.cs
     return;
   }
   const commentAuthors = store.getCommentAuthors();
-  const { removeBlockUserComment, blockedUsers, showBlockUserComment, showBlockUserCommentTag, showBlockUserTagType } = await myStorage.getConfig();
+  const config = await myStorage.getConfig();
+  const { removeBlockUserComment, replaceBlockUserContentWithStar, showBlockUserComment, showBlockUserCommentTag, showBlockUserTagType } = config;
   const comments = nodeComments.children;
   for (let i = 0, len = comments.length; i < len; i++) {
     const item = comments[i] as HTMLElement;
@@ -123,22 +155,28 @@ const formatComments = async (nodeComments?: HTMLElement, commentBoxClass = '.cs
     const itemCommentUsers = itemUserBox.querySelectorAll('.css-1tww9qq');
     /** 当前 item 是否隐藏 */
     let isHidden = false;
+    let blockedUserToReplace: IBlockedUser | undefined = undefined;
 
-    itemCommentUsers.forEach(async (userOne) => {
+    itemCommentUsers.forEach(async (userOne, index) => {
       if (isHidden) return;
       const userLink = userOne.querySelector('.css-1gomreu a') as HTMLAnchorElement;
       if (!userLink) return;
-      const userId = userLink.href.replace(/[\w\W]+\/people\//, '');
+      const userId = getUserIdFromPeopleLink(userLink.href);
       /** 匹配在黑名单的位置 */
-      const findUser = (blockedUsers || []).find((i) => i.id === userId);
+      const blockedUserInfo = findBlockedUserWithType(config, userId);
+      const findUser = blockedUserInfo?.user;
       /** 是否在黑名单中 */
       const isBlocked = !!findUser;
 
-      // 屏蔽黑名单用户发布的评论
-      if (removeBlockUserComment && isBlocked) {
-        isHidden = true;
-        fnLog('已隐藏一个黑名单用户的评论，' + `${findUser.name}`);
-        return;
+      // 只有评论作者命中黑名单时才隐藏或替换，回复对象命中不影响评论内容
+      if (index === 0 && findUser) {
+        if (replaceBlockUserContentWithStar) {
+          blockedUserToReplace = findUser;
+        } else if (removeBlockUserComment) {
+          isHidden = true;
+          fnLog('已隐藏一个黑名单用户的评论，' + `${findUser.name}`);
+          return;
+        }
       }
       // 已经添加过盒子的内容不再处理
       if (userOne.querySelector(`.${CLASS_BLOCK_USER_BOX}`)) return;
@@ -151,19 +189,30 @@ const formatComments = async (nodeComments?: HTMLElement, commentBoxClass = '.cs
         className: CLASS_BLOCK_USER_BOX,
         innerHTML: changeBlockedUsersBox(isBlocked, showBlockUserComment, showBlockUserCommentTag, showBlockUserTagType, findUser),
       });
+      let currentBlockedSource = blockedUserInfo?.listType;
+      let currentBlockedUser = findUser;
       nBox.onclick = async function (event) {
         const me = this as HTMLElement;
         const target = event.target as HTMLButtonElement;
         // 解除屏蔽
         if (target.classList.contains(CLASS_BTN_REMOVE_BLOCKED)) {
-          await removeBlockUser(commentUserInfo);
+          if (currentBlockedSource === BLOCKED_USER_LIST_TYPE.local) {
+            await removeItemAfterBlock(commentUserInfo, BLOCKED_USER_LIST_TYPE.local);
+          } else {
+            await removeBlockUser(commentUserInfo);
+          }
+          currentBlockedSource = undefined;
+          currentBlockedUser = undefined;
           me.innerHTML = changeBlockedUsersBox(false, showBlockUserComment, showBlockUserCommentTag, showBlockUserTagType);
           return;
         }
         // 添加屏蔽
         if (target.classList.contains(CLASS_BTN_ADD_BLOCKED)) {
-          await addBlockUser(commentUserInfo);
-          me.innerHTML = changeBlockedUsersBox(true, showBlockUserComment, showBlockUserCommentTag, showBlockUserTagType);
+          const listType = await addBlockUser(commentUserInfo);
+          if (!listType) return;
+          currentBlockedSource = listType;
+          currentBlockedUser = commentUserInfo;
+          me.innerHTML = changeBlockedUsersBox(true, showBlockUserComment, showBlockUserCommentTag, showBlockUserTagType, currentBlockedUser);
           return;
         }
       };
@@ -174,6 +223,9 @@ const formatComments = async (nodeComments?: HTMLElement, commentBoxClass = '.cs
       item.style.display = 'none';
       item.classList.add(CTZ_HIDDEN_ITEM_CLASS);
       continue;
+    }
+    if (blockedUserToReplace) {
+      replaceBlockedCommentContent(item, commentBoxClass, blockedUserToReplace, showBlockUserTagType);
     }
 
     // item.querySelectorAll('.comment_img img').forEach((itemImage) => {
