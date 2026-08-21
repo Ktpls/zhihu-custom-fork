@@ -129,8 +129,12 @@ export const myStorage = {
   _weakCachedBlacklist: new BlacklistCache<{ id: string }>(
     (user) => user.id,
     async (): Promise<{ id: string }[]> => {
-      const blockedUsers: { id: string }[] = (await myStorage.getConfig())['blockedUsers'] || [];
-      return blockedUsers;
+      // 缓存数据源：知乎黑名单 + 本地黑名单
+      const config = await myStorage.getConfig();
+      return [
+        ...((config['blockedUsers'] || []) as { id: string }[]),
+        ...((config['localBlockedUsers'] || []) as { id: string }[]),
+      ];
     }
   ),
   getWeakCachedBlacklist: function () {

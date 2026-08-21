@@ -2,7 +2,7 @@ import { store } from '../../store';
 import { dom, domById, domC, fnDomReplace, formatTime, message, myStorage } from '../../tools';
 import { Semaphore } from '../../tools/semaphore';
 import { ID_BLOCK_LIST, initHTMLBlockedUsers } from './create-html';
-import { removeBlockUser, removeBlockUserOnZhihuServer, blockUserOnZhihuServer } from './do-fetch';
+import { blockUserOnZhihuServer, removeBlockUser, removeBlockUserOnZhihuServer } from './do-fetch';
 import { BLACK_LIST_CONFIG_NAMES, IBlockedUser, IConfigBlackList, mergeBlockedUsers } from './types';
 
 /** 导出黑名单部分配置 */

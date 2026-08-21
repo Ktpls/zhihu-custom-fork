@@ -26,8 +26,6 @@ export const updateItemAfterBlock = async (
     [otherListKey]: (config[otherListKey] || []).filter((item) => item.id !== userInfo.id),
   });
 
-  await myStorage.getWeakCachedBlacklist().add(userInfo);
-
   await initHTMLBlockedUsers(document.body);
   if (options.openTagChoose !== false && openTagChooseAfterBlockedUser) {
     const nodeUserItem = dom(`#${listType === BLOCKED_USER_LIST_TYPE.zhihu ? ID_BLOCK_LIST : ID_LOCAL_BLOCK_LIST} .ctz-black-id-${userInfo.id}`);
@@ -44,7 +42,6 @@ export const removeItemAfterBlock = async (userInfo: IBlockedUser, listType: TBl
   if (itemIndex >= 0) {
     blockedUsers.splice(itemIndex, 1);
     await myStorage.updateConfigItem(listKey, blockedUsers);
-    await myStorage.getWeakCachedBlacklist().remove(userInfo);
   }
   initHTMLBlockedUsers(document.body);
 };

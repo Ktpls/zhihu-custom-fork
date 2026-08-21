@@ -296,21 +296,23 @@ const openBlockedUserMenu = (button: HTMLElement, item: HTMLElement, listType: T
 
 const removeLocalBlockedUser = async (info: IBlockedUser) => {
   const config = await myStorage.getConfig();
+  const nextList = (config.localBlockedUsers || []).filter((item) => item.id !== info.id);
   await myStorage.updateConfig({
     ...config,
-    localBlockedUsers: (config.localBlockedUsers || []).filter((item) => item.id !== info.id),
+    localBlockedUsers: nextList,
   });
   initHTMLBlockedUsers(document.body);
 };
 
 const moveBlockedUserToLocal = async (info: IBlockedUser) => {
-  await removeBlockUser(info, false);
+  await removeBlockUser(info, false); // 内部会同步缓存（removeItemAfterBlock）
   const config = await myStorage.getConfig();
   const localBlockedUsers = config.localBlockedUsers || [];
   const localUser = localBlockedUsers.find((item) => item.id === info.id);
+  const nextUser = mergeBlockedUser(localUser, info);
   await myStorage.updateConfig({
     ...config,
-    localBlockedUsers: [mergeBlockedUser(localUser, info), ...localBlockedUsers.filter((item) => item.id !== info.id)],
+    localBlockedUsers: [nextUser, ...localBlockedUsers.filter((item) => item.id !== info.id)],
   });
   initHTMLBlockedUsers(document.body);
   message('已移动至本地黑名单');

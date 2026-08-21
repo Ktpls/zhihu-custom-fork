@@ -409,7 +409,6 @@
       [listKey]: [nextUser, ...prevList.filter((item) => item.id !== userInfo.id)],
       [otherListKey]: (config[otherListKey] || []).filter((item) => item.id !== userInfo.id)
     });
-    await myStorage.getWeakCachedBlacklist().add(userInfo);
     await initHTMLBlockedUsers(document.body);
     if (options.openTagChoose !== false && openTagChooseAfterBlockedUser) {
       const nodeUserItem = dom(`#${listType === BLOCKED_USER_LIST_TYPE.zhihu ? ID_BLOCK_LIST : ID_LOCAL_BLOCK_LIST} .ctz-black-id-${userInfo.id}`);
@@ -424,7 +423,6 @@
     if (itemIndex >= 0) {
       blockedUsers.splice(itemIndex, 1);
       await myStorage.updateConfigItem(listKey, blockedUsers);
-      await myStorage.getWeakCachedBlacklist().remove(userInfo);
     }
     initHTMLBlockedUsers(document.body);
   };
@@ -1180,9 +1178,10 @@
   };
   var removeLocalBlockedUser = async (info) => {
     const config = await myStorage.getConfig();
+    const nextList = (config.localBlockedUsers || []).filter((item) => item.id !== info.id);
     await myStorage.updateConfig({
       ...config,
-      localBlockedUsers: (config.localBlockedUsers || []).filter((item) => item.id !== info.id)
+      localBlockedUsers: nextList
     });
     initHTMLBlockedUsers(document.body);
   };
@@ -1191,9 +1190,10 @@
     const config = await myStorage.getConfig();
     const localBlockedUsers = config.localBlockedUsers || [];
     const localUser = localBlockedUsers.find((item) => item.id === info.id);
+    const nextUser = mergeBlockedUser(localUser, info);
     await myStorage.updateConfig({
       ...config,
-      localBlockedUsers: [mergeBlockedUser(localUser, info), ...localBlockedUsers.filter((item) => item.id !== info.id)]
+      localBlockedUsers: [nextUser, ...localBlockedUsers.filter((item) => item.id !== info.id)]
     });
     initHTMLBlockedUsers(document.body);
     message("已移动至本地黑名单");
@@ -3466,8 +3466,11 @@
     _weakCachedBlacklist: new BlacklistCache(
       (user) => user.id,
       async () => {
-        const blockedUsers = (await myStorage.getConfig())["blockedUsers"] || [];
-        return blockedUsers;
+        const config = await myStorage.getConfig();
+        return [
+          ...config["blockedUsers"] || [],
+          ...config["localBlockedUsers"] || []
+        ];
       }
     ),
     getWeakCachedBlacklist: function() {
