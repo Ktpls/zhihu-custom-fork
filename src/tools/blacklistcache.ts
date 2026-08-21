@@ -56,6 +56,15 @@ export class BlacklistCache<T = any> {
   }
 
   /**
+   * 使缓存失效
+   * 将map和bloom置空，下次查询时通过ensureCacheBuilt自动重建
+   */
+  public async invalidate(): Promise<void> {
+    this.map = null;
+    this.bloom = null;
+  }
+
+  /**
    * 重建
    * 清空布隆过滤器和map
    * 获取所有元素

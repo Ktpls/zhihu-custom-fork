@@ -3,7 +3,7 @@ import { store } from '../../store';
 import { CTZ_HIDDEN_ITEM_CLASS, createButtonFontSize12, doFetchNotInterested, domP, fnHidden, myStorage } from '../../tools';
 import { IZhihuCardContent, IZhihuDataZop } from '../../types/zhihu';
 import { EThemeDark, EThemeLight, doHighlightOriginal } from '../background';
-import { createBlockedUserTagHTML, getAllBlockedUsers, IBlockedUser } from '../black-list';
+import { createBlockedUserTagHTML, IBlockedUser } from '../black-list';
 
 const CLASS_BLOCKED_CONTENT_REPLACEMENT = 'ctz-blocked-content-replacement';
 const BLOCKED_CONTENT_REPLACEMENT_TEXT = `<span class="ctz-blocked-content-replacement-text">***</span>`;
@@ -48,7 +48,6 @@ export const processingData = async (nodes: NodeListOf<HTMLElement>) => {
     blockAnswerShorterThanThreshOnList = 0,
   } = pfConfig;
   const removeRecommendMap = new Map(removeRecommends.map((item) => [String(item.id), item.message]));
-  const blockedUserMap = new Map(getAllBlockedUsers(pfConfig).map((item) => [item.id, item]));
   const notInterestedSet = new Set(notInterestedList);
   const filterKeywordPatterns = createWordPatterns(filterKeywords);
   const answerWordPatterns = createWordPatterns(blockWordsAnswer);
@@ -78,7 +77,7 @@ export const processingData = async (nodes: NodeListOf<HTMLElement>) => {
       cardContent = JSON.parse(nodeContentItem.getAttribute('data-za-extra-module') || '{}').card.content;
     } catch { }
     const { title = '', itemId } = dataZop || {};
-    const blockedUser = blockedUserMap.get(String(cardContent.author_member_hash_id || ''));
+    const blockedUser = await myStorage.getBlacklistedDude(String(cardContent.author_member_hash_id || ''));
     // 替换模式优先级最高：命中黑名单时不再执行其他隐藏规则
     const blockedUserToReplace = replaceBlockUserContentWithStar ? blockedUser : undefined;
     // 未隐藏的元素需添加的内容

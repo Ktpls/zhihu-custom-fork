@@ -1,3 +1,4 @@
+import type { IBlockedUser } from '../components/black-list/types';
 import { SAVE_HISTORY_NUMBER } from '../config';
 import { IPfConfig, IPfHistory } from '../config/types';
 import { BlacklistCache } from './blacklistcache';
@@ -117,6 +118,9 @@ export const myStorage = {
   /** 更新配置 */
   updateConfig: async function (params: IPfConfig, refreshTimestamp = true) {
     await this.set('pfConfig', params, refreshTimestamp);
+    // 配置更新可能包含黑名单变更，使黑名单缓存失效，下次查询时自动重建
+    // 禁用缓存自动失效，留待页面刷新时再更新
+    // await this._weakCachedBlacklist.invalidate();
   },
   updateHistoryItem: async function (key: 'list' | 'view', params: string[]) {
     const pfHistory = await this.getHistory();
@@ -126,14 +130,14 @@ export const myStorage = {
   updateHistory: async function (value: IPfHistory) {
     await this.set('pfHistory', value);
   },
-  _weakCachedBlacklist: new BlacklistCache<{ id: string }>(
+  _weakCachedBlacklist: new BlacklistCache<IBlockedUser>(
     (user) => user.id,
-    async (): Promise<{ id: string }[]> => {
+    async (): Promise<IBlockedUser[]> => {
       // 缓存数据源：知乎黑名单 + 本地黑名单
       const config = await myStorage.getConfig();
       return [
-        ...((config['blockedUsers'] || []) as { id: string }[]),
-        ...((config['localBlockedUsers'] || []) as { id: string }[]),
+        ...((config['blockedUsers'] || []) as IBlockedUser[]),
+        ...((config['localBlockedUsers'] || []) as IBlockedUser[]),
       ];
     }
   ),
@@ -141,8 +145,8 @@ export const myStorage = {
     return this._weakCachedBlacklist;
   },
   clearWeakCachedBlacklist: async function () {
-    // BlacklistCache 没有 invalidate 方法，但 rebuild 会清空并重新加载
-    await this._weakCachedBlacklist.rebuild();
+    // invalidate 后下次查询时通过 ensureCacheBuilt 自动重建
+    await this._weakCachedBlacklist.invalidate();
   },
   getBlacklistedDude: async function (userId: string | null | undefined) {
     return await this.getWeakCachedBlacklist().get(userId)

@@ -2,7 +2,7 @@ import { doContentItem } from '../../init/init-top-event-listener';
 import { CLASS_LISTENED } from '../../misc';
 import { CTZ_HIDDEN_ITEM_CLASS, domA, domP, fnHidden, fnLog, myStorage } from '../../tools';
 import { IZhihuCardContent, IZhihuDataZop } from '../../types/zhihu';
-import { createBlockedUserTagHTML, getAllBlockedUsers, IBlockedUser } from '../black-list';
+import { createBlockedUserTagHTML, IBlockedUser } from '../black-list';
 import { EHomeContentOpen } from '../select';
 
 const CLASS_BLOCKED_CONTENT_REPLACEMENT = 'ctz-blocked-content-replacement';
@@ -31,8 +31,7 @@ const handleBlockedUserHomeContent = async (contentItem: HTMLElement) => {
     cardContent = JSON.parse(contentItem.getAttribute('data-za-extra-module') || '{}').card.content;
   } catch {}
 
-  const blockedUserMap = new Map(getAllBlockedUsers(config).map((item) => [item.id, item]));
-  const blockedUser = blockedUserMap.get(String(cardContent.author_member_hash_id || ''));
+  const blockedUser = await myStorage.getBlacklistedDude(String(cardContent.author_member_hash_id || ''));
   if (!blockedUser) return false;
 
   if (replaceBlockUserContentWithStar) {

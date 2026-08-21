@@ -3,7 +3,7 @@ import { CLASS_LISTENED } from '../../misc';
 import { store } from '../../store';
 import { CTZ_HIDDEN_ITEM_CLASS, dom, domA, fnHidden, fnLog, myStorage } from '../../tools';
 import { IZhihuCardContent, IZhihuDataZop } from '../../types/zhihu/zhihu.type';
-import { createBlockedUserTagHTML, getAllBlockedUsers, IBlockedUser } from '../black-list';
+import { createBlockedUserTagHTML, IBlockedUser } from '../black-list';
 import { EAnswerOpen } from '../select';
 
 /** 监听详情回答 - 过滤 */
@@ -89,7 +89,6 @@ const processingData = async (nodes: NodeListOf<HTMLElement>) => {
     highPerformanceAnswer,
     blockAnswerShorterThanThreshOnAnswer = 0,
   } = config;
-  const blockedUserMap = new Map(getAllBlockedUsers(config).map((item) => [item.id, item]));
   const blockWordPatterns = createWordPatterns(blockWordsAnswer);
   const codePrefix = Date.now();
 
@@ -107,7 +106,7 @@ const processingData = async (nodes: NodeListOf<HTMLElement>) => {
       dataZop = JSON.parse(nodeItemContent.getAttribute('data-zop') || '{}');
       dataCardContent = JSON.parse(nodeItemContent.getAttribute('data-za-extra-module') || '{}').card.content;
     } catch {}
-    const blockedUser = blockedUserMap.get(String(dataCardContent.author_member_hash_id || ''));
+    const blockedUser = await myStorage.getBlacklistedDude(String(dataCardContent.author_member_hash_id || ''));
     // 替换模式优先级最高：命中黑名单时不再执行其他隐藏规则
     const blockedUserToReplace = replaceBlockUserContentWithStar ? blockedUser : undefined;
     // FIRST

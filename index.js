@@ -352,7 +352,6 @@
     return [...map.values()];
   };
   var getBlockedUsersByType = (config, listType) => config[BLOCKED_USER_LIST_CONFIG_KEY[listType]] || [];
-  var getAllBlockedUsers = (config) => mergeBlockedUsers([...config.blockedUsers || [], ...config.localBlockedUsers || []]);
   var findBlockedUserWithType = (config, id) => {
     const zhihuUser = (config.blockedUsers || []).find((item) => item.id === id);
     if (zhihuUser) return { user: zhihuUser, listType: BLOCKED_USER_LIST_TYPE.zhihu };
@@ -2193,7 +2192,6 @@
       highPerformanceAnswer,
       blockAnswerShorterThanThreshOnAnswer = 0
     } = config;
-    const blockedUserMap = new Map(getAllBlockedUsers(config).map((item) => [item.id, item]));
     const blockWordPatterns = createWordPatterns(blockWordsAnswer);
     const codePrefix = Date.now();
     for (let i = 0, len = nodes.length; i < len; i++) {
@@ -2211,7 +2209,7 @@
         dataCardContent = JSON.parse(nodeItemContent.getAttribute("data-za-extra-module") || "{}").card.content;
       } catch {
       }
-      const blockedUser = blockedUserMap.get(String(dataCardContent.author_member_hash_id || ""));
+      const blockedUser = await myStorage.getBlacklistedDude(String(dataCardContent.author_member_hash_id || ""));
       const blockedUserToReplace = replaceBlockUserContentWithStar ? blockedUser : void 0;
       !blockedUserToReplace && (dataCardContent["upvote_num"] || 0) < lessVoteNumberDetail && removeLessVoteDetail && (message2 = `过滤低赞回答: ${dataCardContent["upvote_num"]}赞`);
       if (!message2 && !blockedUserToReplace && removeFromYanxuan) {
@@ -2356,7 +2354,6 @@
       blockAnswerShorterThanThreshOnList = 0
     } = pfConfig;
     const removeRecommendMap = new Map(removeRecommends.map((item) => [String(item.id), item.message]));
-    const blockedUserMap = new Map(getAllBlockedUsers(pfConfig).map((item) => [item.id, item]));
     const notInterestedSet = new Set(notInterestedList);
     const filterKeywordPatterns = createWordPatterns2(filterKeywords);
     const answerWordPatterns = createWordPatterns2(blockWordsAnswer);
@@ -2383,7 +2380,7 @@
       } catch {
       }
       const { title = "", itemId } = dataZop || {};
-      const blockedUser = blockedUserMap.get(String(cardContent.author_member_hash_id || ""));
+      const blockedUser = await myStorage.getBlacklistedDude(String(cardContent.author_member_hash_id || ""));
       const blockedUserToReplace = replaceBlockUserContentWithStar ? blockedUser : void 0;
       const domFeedSource = nodeItem.querySelector(".FeedSource");
       if (!blockedUserToReplace && domFeedSource) {
@@ -2616,8 +2613,7 @@
       cardContent = JSON.parse(contentItem.getAttribute("data-za-extra-module") || "{}").card.content;
     } catch {
     }
-    const blockedUserMap = new Map(getAllBlockedUsers(config).map((item) => [item.id, item]));
-    const blockedUser = blockedUserMap.get(String(cardContent.author_member_hash_id || ""));
+    const blockedUser = await myStorage.getBlacklistedDude(String(cardContent.author_member_hash_id || ""));
     if (!blockedUser) return false;
     if (replaceBlockUserContentWithStar) {
       replaceBlockedUserHomeContent(contentItem, blockedUser, showBlockUserTagType);
@@ -3324,6 +3320,10 @@
       const key = this.key_getter(item);
       this.map.delete(key);
     }
+    async invalidate() {
+      this.map = null;
+      this.bloom = null;
+    }
     async rebuild() {
       this.map = /* @__PURE__ */ new Map();
       this.bloom = new BloomFilter(1e3, 3);
@@ -3477,7 +3477,7 @@
       return this._weakCachedBlacklist;
     },
     clearWeakCachedBlacklist: async function() {
-      await this._weakCachedBlacklist.rebuild();
+      await this._weakCachedBlacklist.invalidate();
     },
     getBlacklistedDude: async function(userId) {
       return await this.getWeakCachedBlacklist().get(userId);
