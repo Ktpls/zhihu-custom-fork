@@ -46,6 +46,7 @@
         <div class="ctz-right-title-content"></div>
         <div class="ctz-version" style="font-size: 12px"></div>
       </div>
+      <div id="CTZ_DIALOG_RIGHT_ANCHOR" style="display: none"></div>
 
       <div id="CTZ_DIALOG_MAIN">
         <!-- 基础设置 -->
@@ -171,6 +172,35 @@
             <div class="ctz-form-box-item">
               <div>悬浮收起按钮位置，数字越大离右侧越远：</div>
               <div><input name="suspensionPickupRight" type="number" class="ctz-i-change" style="width: 80px" /></div>
+            </div>
+          </div>
+
+          <div class="ctz-form-box">
+            <div class="ctz-form-box-item">
+              <div>菜单栏切换模块悬浮</div>
+              <div><input class="ctz-i ctz-switch" name="suspensionSwitch" type="checkbox" value="on" /></div>
+            </div>
+            <div id="CTZ_FORM_CHILDREN_SUSPENSION_SWITCH">
+              <div class="ctz-form-box-item">
+                <div>显示 - 关注</div>
+                <div><input class="ctz-i ctz-switch" name="suspensionSwitchFollow" type="checkbox" value="on" /></div>
+              </div>
+              <div class="ctz-form-box-item">
+                <div>显示 - 推荐</div>
+                <div><input class="ctz-i ctz-switch" name="suspensionSwitchDefault" type="checkbox" value="on" /></div>
+              </div>
+              <div class="ctz-form-box-item">
+                <div>显示 - 热榜</div>
+                <div><input class="ctz-i ctz-switch" name="suspensionSwitchHot" type="checkbox" value="on" /></div>
+              </div>
+              <div class="ctz-form-box-item">
+                <div>显示 - 专栏</div>
+                <div><input class="ctz-i ctz-switch" name="suspensionSwitchColumnSquare" type="checkbox" value="on" /></div>
+              </div>
+              <div class="ctz-form-box-item">
+                <div>显示 - 圈子</div>
+                <div><input class="ctz-i ctz-switch" name="suspensionSwitchRingFeeds" type="checkbox" value="on" /></div>
+              </div>
             </div>
           </div>
 
@@ -392,19 +422,30 @@
             </div>
           </div>
 
-          <!-- 黑名单列表 -->
-          <div class="ctz-title">黑名单列表</div>
+          <!-- 知乎黑名单 -->
+          <div class="ctz-title">知乎黑名单</div>
           <div class="ctz-form-box">
             <div class="ctz-form-box-item">
               <div></div>
-              <div><button name="syncBlack" class="ctz-button">同步黑名单</button></div>
+              <div><button name="syncBlack" class="ctz-button">同步知乎黑名单</button></div>
             </div>
             <div class="ctz-form-box-item">
               <div id="CTZ_BLOCKED_NUMBER"></div>
-              <div><button name="syncBlackRemove" class="ctz-button">清空黑名单列表</button></div>
+              <div><button name="syncBlackRemove" class="ctz-button">清空知乎黑名单</button></div>
             </div>
             <div class="ctz-form-box-item">
               <div id="CTA_BLOCKED_USERS"></div>
+            </div>
+          </div>
+
+          <!-- 本地黑名单 -->
+          <div class="ctz-title">本地黑名单</div>
+          <div class="ctz-form-box">
+            <div class="ctz-form-box-item">
+              <div id="CTZ_LOCAL_BLOCKED_NUMBER"></div>
+            </div>
+            <div class="ctz-form-box-item">
+              <div id="CTA_LOCAL_BLOCKED_USERS"></div>
             </div>
           </div>
         </div>
@@ -510,10 +551,10 @@
               <div>弹窗打开动图</div>
               <div><input class="ctz-i ctz-switch" name="showGIFinDialog" type="checkbox" value="on" /></div>
             </div>
-            <div class="ctz-form-box-item">
+            <!-- <div class="ctz-form-box-item">
               <div>评论图片预览不超出页面</div>
               <div><input class="ctz-i ctz-switch" name="commentImageFullPage" type="checkbox" value="on" /></div>
-            </div>
+            </div> -->
           </div>
 
           <div class="ctz-title">视频尺寸</div>
@@ -583,4 +624,16 @@
       <button class="ctz-button" name="cancel-change-blocked-user-tag-name">取消</button>
     </div>
   </div>
+</div>
+
+<!-- 菜单栏切换模块悬浮 -->
+<div id="CTZ_SUSPENSION_SWITCH" style="display: none">
+  <a href="https://www.zhihu.com/follow" target="_self" data-type="suspensionSwitchFollow">关</a>
+  <a href="https://www.zhihu.com" target="_self" data-type="suspensionSwitchDefault">推</a>
+  <a href="https://www.zhihu.com/hot" target="_self" data-type="suspensionSwitchHot">热</a>
+  <a href="https://www.zhihu.com/column-square" target="_self" data-type="suspensionSwitchColumnSquare">专</a>
+  <a href="https://www.zhihu.com/ring-feeds" target="_self" data-type="suspensionSwitchRingFeeds">圈</a>
+  <div class="lock-icon" data-lock="true">🔒</div>
+  <!-- 🔓 -->
+  <div class="move-mock"></div>
 </div>

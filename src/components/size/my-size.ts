@@ -36,7 +36,10 @@ export const mySize = {
       zoomListVideoSize,
       zoomListVideoType,
       fixedListItemMore,
-      questionTitleTag,
+      listTitleTagQuestion,
+      listTitleTagArticle,
+      listTitleTagVideo,
+      listTitleTagPin,
       themeDark = EThemeDark.深色一,
       themeLight = EThemeLight.默认,
       suspensionHomeTabPo,
@@ -66,8 +69,8 @@ export const mySize = {
     const versionSizeCollection = formatVersionPercentSize('versionCollection');
 
     const NAME_HOME = '.Topstory-mainColumn,.SearchMain';
-    const NAME_ANSWER = '.Question-main,.QuestionHeader-footer-inner,.QuestionHeader .QuestionHeader-content';
-    const NAME_ARTICLE = '.Post-NormalSub>div,.zhuanlan .Post-Row-Content,.zhuanlan .css-1pariuy,.zhuanlan .css-44kk6u';
+    const NAME_ANSWER = '.QuestionPage,.QuestionHeader-footer-inner,.QuestionHeader .QuestionHeader-content,.QuestionPage>div';
+    const NAME_ARTICLE = '.Post-NormalSub>div,.zhuanlan .Post-Row-Content,.zhuanlan .css-pi1fiy';
     //.Post-NormalMain .Post-Header， ,.Post-NormalMain>div 旧的专栏 ,.zhuanlan .css-1xy3kyp ,.zhuanlan .css-1voxft1 ,.zhuanlan .css-9w3zhd,.zhuanlan .css-15k5nix,.zhuanlan .css-1byd3cx
     const NAME_USER_HOME = '#ProfileHeader,[itemprop="people"] .Profile-main';
     const NAME_COLLECTION = '.CollectionsDetailPage';
@@ -77,7 +80,7 @@ export const mySize = {
       // 首页列表页面内容宽度
       `${NAME_HOME}{width: ${versionSizeHome}!important;}` +
       // 回答详情页面内容宽度
-      `${NAME_ANSWER}{width: ${versionSizeAnswer}!important;}` +
+      `${NAME_ANSWER}{width: ${versionSizeAnswer}!important;margin: 0 auto; padding: 0;}` +
       // 文章页面内容宽度
       `${NAME_ARTICLE}{width: ${versionSizeArticle}!important;}` +
       `.zhuanlan .Post-SideActions{right: ${
@@ -122,14 +125,21 @@ export const mySize = {
     );
 
     /** 内容标题添加类别显示 */
-    const xxxTitleTag = fnReturnStr(
-      `.AnswerItem .ContentItem-title::before{content:'「问答」';color:#ec7259;font-size:14px;}` +
-        `.TopstoryItem .PinItem::before{content:'「想法」';font-size:14px;color:#9c27b0;margin-right:6px;font-weight:normal;display:inline;}` +
-        `.PinItem>.ContentItem-title{margin-top:4px;}.ZvideoItem .ContentItem-title::before{content:'「视频」';font-size:14px;color:#12c2e9}.ZVideoItem .ContentItem-title::before{content:'「视频」';font-size:14px;color:#12c2e9}` +
-        `.ArticleItem .ContentItem-title::before{content:'「文章」';font-size:14px;color:#00965e}` +
-        `.TopstoryQuestionAskItem .ContentItem-title::before{content:'「提问」';font-size:14px;color:#533b77}`,
-      questionTitleTag
-    );
+    const xxxTitleTag =
+      fnReturnStr(
+        `.AnswerItem .ContentItem-title::before{content:'「问答」';color:#ec7259;font-size:14px;}` +
+          `.TopstoryQuestionAskItem .ContentItem-title::before{content:'「提问」';font-size:14px;color:#533b77}`,
+        listTitleTagQuestion
+      ) +
+      fnReturnStr(`.ArticleItem .ContentItem-title::before{content:'「文章」';font-size:14px;color:#00965e}`, listTitleTagArticle) +
+      fnReturnStr(
+        `.ZvideoItem .ContentItem-title::before{content:'「视频」';font-size:14px;color:#12c2e9}.ZVideoItem .ContentItem-title::before{content:'「视频」';font-size:14px;color:#12c2e9}`,
+        listTitleTagVideo
+      ) +
+      fnReturnStr(
+        `.TopstoryItem .PinItem::before{content:'「想法」';font-size:14px;color:#9c27b0;margin-right:6px;font-weight:normal;display:inline;}.PinItem>.ContentItem-title{margin-top:4px;}`,
+        listTitleTagPin
+      );
 
     /** 首页问题列表切换模块悬浮 */
     const xxxSusHomeTab = fnReturnStr(
@@ -216,7 +226,7 @@ export const mySize = {
         !!fontSizeForList
       ) +
       // 回答文字大小
-      fnReturnStr(`.Question-main .RichContent-inner,.Question-main .ctz-list-item-time,.Question-main .CommentContent{font-size: ${fontSizeForAnswer}px}`, !!fontSizeForAnswer) +
+      fnReturnStr(`.QuestionPage .RichContent-inner,.QuestionPage .ctz-list-item-time,.QuestionPage .CommentContent{font-size: ${fontSizeForAnswer}px}`, !!fontSizeForAnswer) +
       // 文章文字大小
       fnReturnStr(`.zhuanlan .Post-RichTextContainer,.zhuanlan .ctz-article-create-time,.zhuanlan .CommentContent{font-size: ${fontSizeForArticle}px}`, !!fontSizeForArticle) +
       // 文章标题文字大小

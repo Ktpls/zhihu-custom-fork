@@ -1,11 +1,12 @@
 import { dom, domById, myStorage } from '../tools';
 import { INPUT_NAME_THEME, INPUT_NAME_THEME_DARK, INPUT_NAME_ThEME_LIGHT, myBackground, onUseThemeDark } from './background';
+import { changeReplaceBlockUserSwitchDisabled } from './black-list';
 import { appendHiddenStyle } from './hidden';
 import { previewGIF } from './image';
 import { myListenList } from './listen-list';
 import { changeICO, changeTitle } from './page-title';
 import { mySize } from './size';
-import { suspensionPickupAttribute } from './suspension';
+import { onChangeSuspensionSwitch, suspensionPickupAttribute } from './suspension';
 import { addArticleTime, addQuestionTime } from './time';
 
 /** 更改编辑器方法 */
@@ -13,6 +14,10 @@ export const fnChanger = async (ev: HTMLInputElement) => {
   // onchange 时只调用 mySize 的 name
   const doCssVersion = [
     'questionTitleTag',
+    'listTitleTagQuestion',
+    'listTitleTagArticle',
+    'listTitleTagVideo',
+    'listTitleTagPin',
     'fixedListItemMore',
     // 'linkShopping',
     'highlightListItem',
@@ -100,8 +105,14 @@ export const fnChanger = async (ev: HTMLInputElement) => {
     //   myListenUserHomeList.restart();
     // },
     topVote: () => {
-      appendHiddenStyle()
-    }
+      appendHiddenStyle();
+    },
+    suspensionSwitch: onChangeSuspensionSwitch,
+    suspensionSwitchFollow: onChangeSuspensionSwitch,
+    suspensionSwitchDefault: onChangeSuspensionSwitch,
+    suspensionSwitchHot: onChangeSuspensionSwitch,
+    suspensionSwitchColumnSquare: onChangeSuspensionSwitch,
+    suspensionSwitchRingFeeds: onChangeSuspensionSwitch,
   };
 
   if (name === 'fetchInterceptStatus') {
@@ -112,7 +123,7 @@ export const fnChanger = async (ev: HTMLInputElement) => {
           : '开启接口拦截，确认后将刷新页面。\n如遇到知乎页面无法显示数据的情况请尝试关闭接口拦截。'
       )
     ) {
-      myStorage.updateConfigItem('fetchInterceptStatus', checked);
+      await myStorage.updateConfigItem('fetchInterceptStatus', checked);
       window.location.reload();
     } else {
       ev.checked = !checked;
@@ -121,6 +132,10 @@ export const fnChanger = async (ev: HTMLInputElement) => {
   }
 
   await myStorage.updateConfigItem(name, type === 'checkbox' ? checked : value);
+
+  if (name === 'replaceBlockUserContentWithStar') {
+    changeReplaceBlockUserSwitchDisabled(checked);
+  }
 
   if (type === 'range') {
     const nodeName = domById(name);

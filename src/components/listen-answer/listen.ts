@@ -3,17 +3,24 @@ import { CLASS_LISTENED } from '../../misc';
 import { store } from '../../store';
 import { CTZ_HIDDEN_ITEM_CLASS, dom, domA, fnHidden, fnLog, myStorage } from '../../tools';
 import { IZhihuCardContent, IZhihuDataZop } from '../../types/zhihu/zhihu.type';
+import { createBlockedUserTagHTML, getAllBlockedUsers, IBlockedUser } from '../black-list';
 import { EAnswerOpen } from '../select';
 
 /** 监听详情回答 - 过滤 */
 export const myListenAnswer = {
   initTimestamp: 0,
   loaded: true,
+  retryTimer: undefined as ReturnType<typeof setTimeout> | undefined,
   init: async function () {
     if (!location.pathname.includes('/question/') || !this.loaded) return;
     const currentTime = +new Date();
     if (currentTime - this.initTimestamp < 500) {
-      setTimeout(() => this.init(), 500);
+      if (!this.retryTimer) {
+        this.retryTimer = setTimeout(() => {
+          this.retryTimer = undefined;
+          this.init();
+        }, 500);
+      }
       return;
     }
     if (this.initTimestamp !== 0) {
@@ -26,6 +33,10 @@ export const myListenAnswer = {
     processingData(domA(`.AnswersNavWrapper .List-item:not(.${CLASS_LISTENED})`));
   },
   reset: function () {
+    if (this.retryTimer) {
+      clearTimeout(this.retryTimer);
+      this.retryTimer = undefined;
+    }
     this.dataLoad();
     domA(`.AnswersNavWrapper .List-item.${CLASS_LISTENED}`).forEach((item) => {
       item.classList.remove(CLASS_LISTENED);
@@ -45,8 +56,23 @@ const OB_CLASS_FOLD = {
   off: 'ctz-fold-close',
 };
 
+const CLASS_BLOCKED_CONTENT_REPLACEMENT = 'ctz-blocked-content-replacement';
+const BLOCKED_CONTENT_REPLACEMENT_TEXT = `<span class="ctz-blocked-content-replacement-text">***</span>`;
+
+const replaceBlockedAnswerContent = (nodeItem: HTMLElement, blockedUser: IBlockedUser, showBlockUserTagType?: boolean) => {
+  const nodeRichContent = nodeItem.querySelector('.RichContent') as HTMLElement | null;
+  const nodeContent = (nodeRichContent && nodeRichContent.querySelector('.RichContent-inner')) || nodeRichContent;
+  if (!nodeContent || nodeContent.classList.contains(CLASS_BLOCKED_CONTENT_REPLACEMENT)) return;
+  nodeContent.innerHTML = BLOCKED_CONTENT_REPLACEMENT_TEXT + createBlockedUserTagHTML(showBlockUserTagType, blockedUser);
+  nodeContent.classList.add(CLASS_BLOCKED_CONTENT_REPLACEMENT);
+  nodeRichContent && nodeRichContent.classList.remove('is-collapsed');
+  nodeItem.querySelectorAll('.ContentItem-expandButton,.RichContent-collapsedText').forEach((item) => ((item as HTMLElement).style.display = 'none'));
+  fnLog(`已将黑名单用户${blockedUser.name}的回答替换为 ***`);
+};
+
 const processingData = async (nodes: NodeListOf<HTMLElement>) => {
   const removeAnswers = store.getRemoveAnswers();
+  const removeAnswerMap = new Map(removeAnswers.map((item) => [String(item.id), item.message]));
   const config = await myStorage.getConfig();
   const {
     removeFromYanxuan,
@@ -57,17 +83,21 @@ const processingData = async (nodes: NodeListOf<HTMLElement>) => {
     lessVoteNumberDetail = 0,
     answerOpen = EAnswerOpen.默认,
     removeBlockUserContent,
-    blockedUsers,
+    replaceBlockUserContentWithStar,
+    showBlockUserTagType,
     blockWordsAnswer = [],
     highPerformanceAnswer,
     blockAnswerShorterThanThreshOnAnswer = 0,
   } = config;
+  const blockedUserMap = new Map(getAllBlockedUsers(config).map((item) => [item.id, item]));
+  const blockWordPatterns = createWordPatterns(blockWordsAnswer);
+  const codePrefix = Date.now();
 
   for (let i = 0, len = nodes.length; i < len; i++) {
     let message = '';
     const nodeItem = nodes[i];
     nodeItem.classList.add(CLASS_LISTENED);
-    nodeItem.dataset.code = `${+new Date()}-${i}`; // 添加唯一标识
+    nodeItem.dataset.code = `${codePrefix}-${i}`; // 添加唯一标识
     if (nodeItem.classList.contains(CTZ_HIDDEN_ITEM_CLASS)) continue;
     const nodeItemContent = nodeItem.querySelector('.ContentItem');
     if (!nodeItemContent) continue;
@@ -77,19 +107,25 @@ const processingData = async (nodes: NodeListOf<HTMLElement>) => {
       dataZop = JSON.parse(nodeItemContent.getAttribute('data-zop') || '{}');
       dataCardContent = JSON.parse(nodeItemContent.getAttribute('data-za-extra-module') || '{}').card.content;
     } catch {}
+    const blockedUser = blockedUserMap.get(String(dataCardContent.author_member_hash_id || ''));
+    // 替换模式优先级最高：命中黑名单时不再执行其他隐藏规则
+    const blockedUserToReplace = replaceBlockUserContentWithStar ? blockedUser : undefined;
     // FIRST
     // 低赞回答过滤
-    (dataCardContent['upvote_num'] || 0) < lessVoteNumberDetail && removeLessVoteDetail && (message = `过滤低赞回答: ${dataCardContent['upvote_num']}赞`);
+    !blockedUserToReplace &&
+      (dataCardContent['upvote_num'] || 0) < lessVoteNumberDetail &&
+      removeLessVoteDetail &&
+      (message = `过滤低赞回答: ${dataCardContent['upvote_num']}赞`);
 
     // 屏蔽接口过滤的回答，如盐选专栏...
-    if (!message && removeFromYanxuan) {
+    if (!message && !blockedUserToReplace && removeFromYanxuan) {
       const itemId = String(dataZop.itemId || '');
-      const findItem = removeAnswers.find((i) => i.id === itemId);
-      findItem && (message = findItem.message);
+      const findMessage = removeAnswerMap.get(itemId);
+      findMessage && (message = findMessage);
     }
 
     // 屏蔽带有选中标签的回答
-    if (!message) {
+    if (!message && !blockedUserToReplace) {
       const nodeTag1 = nodeItem.querySelector('.KfeCollection-AnswerTopCard-Container') as HTMLElement;
       const nodeTag2 = nodeItem.querySelector('.LabelContainer-wrapper') as HTMLElement;
       const tagNames = (nodeTag1 ? nodeTag1.innerText : '') + (nodeTag2 ? nodeTag2.innerText : '');
@@ -103,14 +139,14 @@ const processingData = async (nodes: NodeListOf<HTMLElement>) => {
     }
 
     // 屏蔽用户的回答
-    if (!message && removeBlockUserContent && blockedUsers && blockedUsers.length) {
-      const findBlocked = await myStorage.getBlacklistedDude(dataCardContent.author_member_hash_id);
-      findBlocked && (message = `已删除黑名单用户${findBlocked.name}的回答`);
+    if (!message && !blockedUserToReplace && removeBlockUserContent && blockedUser) {
+      message = `已删除黑名单用户${blockedUser.name}的回答`;
     }
 
     // 屏蔽「匿名用户」回答
-    if (!message && removeAnonymousAnswer) {
-      const userName = (nodeItem.querySelector('[itemprop="name"]') as HTMLMetaElement).content;
+    if (!message && !blockedUserToReplace && removeAnonymousAnswer) {
+      const userNode = nodeItem.querySelector('[itemprop="name"]') as HTMLMetaElement | null;
+      const userName = userNode ? userNode.content : '';
       userName === '匿名用户' && (message = `已屏蔽一条「匿名用户」回答`);
     }
 
@@ -126,21 +162,12 @@ const processingData = async (nodes: NodeListOf<HTMLElement>) => {
     }
 
     // 屏蔽词
-    if (!message) {
+    if (!message && !blockedUserToReplace) {
       const domRichContent = nodeItem.querySelector('.RichContent');
       const innerText = domRichContent ? (domRichContent as HTMLElement).innerText : '';
-      if (innerText) {
-        let matchedWord = '';
-        for (let itemWord of blockWordsAnswer) {
-          const rep = new RegExp(itemWord.toLowerCase());
-          if (rep.test(innerText.toLowerCase())) {
-            matchedWord += `「${itemWord}」`;
-            break;
-          }
-        }
-        if (matchedWord) {
-          message = `匹配到屏蔽词${matchedWord}，已屏蔽该回答内容`;
-        }
+      const matchedWord = findMatchedWord(innerText, blockWordPatterns);
+      if (matchedWord) {
+        message = `匹配到屏蔽词${matchedWord}，已屏蔽该回答内容`;
       }
     }
 
@@ -148,9 +175,12 @@ const processingData = async (nodes: NodeListOf<HTMLElement>) => {
       // 最后信息 & 起点位置处理
       fnHidden(nodeItem, message);
     } else {
+      if (blockedUserToReplace) {
+        replaceBlockedAnswerContent(nodeItem, blockedUserToReplace, showBlockUserTagType);
+      }
       doContentItem('QUESTION', nodeItemContent as HTMLElement);
       // 自动展开回答 和 默认收起长回答
-      if (answerOpen !== EAnswerOpen.默认) {
+      if (!blockedUserToReplace && answerOpen !== EAnswerOpen.默认) {
         const buttonUnfold = nodeItem.querySelector('.ContentItem-expandButton') as HTMLButtonElement;
         const buttonFold = nodeItem.querySelector('.RichContent-collapsedText') as HTMLButtonElement;
         if (answerOpen === EAnswerOpen.自动展开所有回答 && !nodeItem.classList.contains(OB_CLASS_FOLD.on)) {
@@ -172,13 +202,42 @@ const processingData = async (nodes: NodeListOf<HTMLElement>) => {
       const nodes = domA('.AnswersNavWrapper .List-item');
       if (nodes.length > 30) {
         const nIndex = nodes.length - 30;
-        nodes.forEach((item, index) => {
-          if (index < nIndex) {
-            item.remove();
-          }
-        });
+        for (let i = 0; i < nIndex; i++) {
+          const item = nodes[i];
+          item && item.remove();
+        }
         fnLog(`已开启高性能模式，删除${nIndex}条回答`);
       }
     }, 500);
   }
+};
+
+interface IWordPattern {
+  word: string;
+  reg: RegExp;
+}
+
+const createWordPatterns = (words: string[]) => {
+  const result: IWordPattern[] = [];
+  for (const word of words) {
+    if (!word) continue;
+    try {
+      result.push({
+        word,
+        reg: new RegExp(word.toLowerCase()),
+      });
+    } catch {}
+  }
+  return result;
+};
+
+const findMatchedWord = (innerText: string, patterns: IWordPattern[]) => {
+  if (!innerText || !patterns.length) return '';
+  const lowerText = innerText.toLowerCase();
+  for (const item of patterns) {
+    if (item.reg.test(lowerText)) {
+      return `「${item.word}」`;
+    }
+  }
+  return '';
 };

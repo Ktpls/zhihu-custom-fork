@@ -10,20 +10,25 @@ interface IRecommendRemoved {
 }
 
 class Store {
+  static readonly MAX_REMOVE_CACHE = 2000;
   /** 用户信息 更改prev: userInfo */
   userInfo: IZhihuUserInfo | undefined = undefined;
   /** 上一个请求的 Headers */
   prevFetchHeaders: HeadersInit = {};
   /** 推荐类别过滤的内容 */
   removeRecommends: IRecommendRemoved[] = [];
+  removeRecommendMap = new Map<string, string>();
   /** 评论区用户信息集合 */
   commendAuthors: IBlockedUser[] = [];
   /** 当前用户主页的回答内容 */
   userAnswers: any[] = [];
+  userAnswersRequestUrl = '';
   /** 当前用户主页的文章内容 */
   userArticle: any[] = [];
+  userArticleRequestUrl = '';
   /** 回答内容过滤的项 */
   removeAnswers: IRecommendRemoved[] = [];
+  removeAnswerMap = new Map<string, string>();
   /** 页面初始化的数据，取自 document.getElementById('js-initialData') */
   jsInitialData: IJsInitialData | undefined = undefined;
 
@@ -37,8 +42,10 @@ class Store {
     this.getRemoveRecommends = this.getRemoveRecommends.bind(this);
     this.setUserAnswer = this.setUserAnswer.bind(this);
     this.getUserAnswer = this.getUserAnswer.bind(this);
+    this.getUserAnswerRequestUrl = this.getUserAnswerRequestUrl.bind(this);
     this.setUserArticle = this.setUserArticle.bind(this);
     this.getUserArticle = this.getUserArticle.bind(this);
+    this.getUserArticleRequestUrl = this.getUserArticleRequestUrl.bind(this);
     this.setCommentAuthors = this.setCommentAuthors.bind(this);
     this.getCommentAuthors = this.getCommentAuthors.bind(this);
     this.findRemoveAnswers = this.findRemoveAnswers.bind(this);
@@ -63,9 +70,9 @@ class Store {
 
   async findRemoveRecommends(recommends: IZhihuRecommendItem[]) {
     const { removeAnonymousQuestion, removeFromYanxuan, videoInAnswerArticle } = await myStorage.getConfig();
-    recommends.forEach((item) => {
+    for (const item of recommends) {
       const target = item.target;
-      if (!target) return;
+      if (!target) continue;
       let message = '';
       // 盐选专栏回答
       if (removeFromYanxuan && target.paid_info) {
@@ -81,28 +88,39 @@ class Store {
       }
 
       if (message) {
-        this.removeRecommends.push({
-          id: String(item.target.id),
-          message,
-        });
+        const id = String(item.target.id);
+        this.removeRecommendMap.set(id, message);
       }
-    });
+    }
+    this.syncRemoveRecommends();
   }
   getRemoveRecommends() {
     return this.removeRecommends;
   }
 
-  setUserAnswer(data: any[]) {
+  setUserAnswer(data: any[], requestUrl = '') {
     this.userAnswers = data;
+    if (requestUrl) {
+      this.userAnswersRequestUrl = requestUrl;
+    }
   }
   getUserAnswer() {
     return this.userAnswers;
   }
-  setUserArticle(data: any[]) {
+  getUserAnswerRequestUrl() {
+    return this.userAnswersRequestUrl;
+  }
+  setUserArticle(data: any[], requestUrl = '') {
     this.userArticle = data;
+    if (requestUrl) {
+      this.userArticleRequestUrl = requestUrl;
+    }
   }
   getUserArticle() {
     return this.userArticle;
+  }
+  getUserArticleRequestUrl() {
+    return this.userArticleRequestUrl;
   }
   async setCommentAuthors(authors: IBlockedUser[]) {
     this.commendAuthors = authors;
@@ -113,7 +131,7 @@ class Store {
 
   async findRemoveAnswers(answers: IZhihuAnswerTarget[]) {
     const { removeFromYanxuan, videoInAnswerArticle } = await myStorage.getConfig();
-    answers.forEach((item) => {
+    for (const item of answers) {
       let message = '';
       if (removeFromYanxuan && item.answerType === 'paid' && item.labelInfo) {
         message = '已删除一条选自盐选专栏的回答';
@@ -124,12 +142,10 @@ class Store {
       }
 
       if (message) {
-        this.removeAnswers.push({
-          id: item.id,
-          message,
-        });
+        this.removeAnswerMap.set(String(item.id), message);
       }
-    });
+    }
+    this.syncRemoveAnswers();
   }
   getRemoveAnswers() {
     return this.removeAnswers;
@@ -140,6 +156,32 @@ class Store {
   }
   getJsInitialData() {
     return this.jsInitialData;
+  }
+
+  syncRemoveRecommends() {
+    const overflow = this.removeRecommendMap.size - Store.MAX_REMOVE_CACHE;
+    if (overflow > 0) {
+      const keys = this.removeRecommendMap.keys();
+      for (let i = 0; i < overflow; i++) {
+        const key = keys.next().value;
+        if (key === undefined) break;
+        this.removeRecommendMap.delete(key);
+      }
+    }
+    this.removeRecommends = Array.from(this.removeRecommendMap.entries()).map(([id, message]) => ({ id, message }));
+  }
+
+  syncRemoveAnswers() {
+    const overflow = this.removeAnswerMap.size - Store.MAX_REMOVE_CACHE;
+    if (overflow > 0) {
+      const keys = this.removeAnswerMap.keys();
+      for (let i = 0; i < overflow; i++) {
+        const key = keys.next().value;
+        if (key === undefined) break;
+        this.removeAnswerMap.delete(key);
+      }
+    }
+    this.removeAnswers = Array.from(this.removeAnswerMap.entries()).map(([id, message]) => ({ id, message }));
   }
 }
 

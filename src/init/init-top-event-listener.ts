@@ -10,17 +10,46 @@ import { fnReplaceZhidaToSearch } from '../components/zhida-to-search';
 import { CLASS_NOT_INTERESTED, CLASS_TO_QUESTION } from '../misc';
 import { doFetchNotInterested, dom, domP, myStorage } from '../tools';
 
+const CLASS_VIDEO_ONE_NAME = CLASS_VIDEO_ONE.replace('.', '');
+const CLASS_VIDEO_TWO_BOX_NAME = CLASS_VIDEO_TWO_BOX.replace('.', '');
+const CONTENT_CONFIG_TTL = 1500;
+let contentConfigCache: Awaited<ReturnType<typeof myStorage.getConfig>> | undefined = undefined;
+let contentConfigAt = 0;
+let contentConfigPromise: Promise<Awaited<ReturnType<typeof myStorage.getConfig>>> | undefined = undefined;
+
+const getContentConfig = async (force = false) => {
+  const now = Date.now();
+  if (!force && contentConfigCache && now - contentConfigAt < CONTENT_CONFIG_TTL) {
+    return contentConfigCache;
+  }
+  if (contentConfigPromise) {
+    return contentConfigPromise;
+  }
+  contentConfigPromise = myStorage
+    .getConfig(force)
+    .then((config) => {
+      contentConfigCache = config;
+      contentConfigAt = Date.now();
+      return config;
+    })
+    .finally(() => {
+      contentConfigPromise = undefined;
+    });
+  return contentConfigPromise;
+};
+
 /** 顶部ROOT元素点击事件 */
 export const initRootEvent = async () => {
   const domRoot = dom('#root');
   if (!domRoot) return;
   domRoot.addEventListener('click', async function (event) {
-    const config = await myStorage.getConfig();
+    const config = await getContentConfig();
+    if (!config) return;
     const { fetchInterceptStatus, videoInAnswerArticle } = config;
     const target = event.target as HTMLElement;
     if (videoInAnswerArticle === EVideoInAnswerArticle.修改为链接) {
       // 回答内容中的视频回答替换为视频链接
-      if (target.classList.contains(CLASS_VIDEO_ONE.replace('.', '')) || target.classList.contains(CLASS_VIDEO_TWO_BOX.replace('.', ''))) {
+      if (target.classList.contains(CLASS_VIDEO_ONE_NAME) || target.classList.contains(CLASS_VIDEO_TWO_BOX_NAME)) {
         const domVideo = target.querySelector('video');
         const videoSrc = domVideo ? domVideo.src : '';
         if (!videoSrc) return;
@@ -42,7 +71,7 @@ export const initRootEvent = async () => {
       doFetchNotInterested({ id, type });
       const nodeTopStoryItem = domP(target, 'class', 'TopstoryItem');
       nodeTopStoryItem && (nodeTopStoryItem.style.display = 'none');
-      addNotInterestedItem(title)
+      addNotInterestedItem(title);
     }
 
     // 点击阅读全文
@@ -59,7 +88,7 @@ export const doReadMore = (currentDom: HTMLElement) => {
 
   const domPByClass = (name: string) => domP(currentDom, 'class', name);
   (domPByClass('Topstory-recommend') || domPByClass('Topstory-follow') || domPByClass('zhuanlan .css-1voxft1') || domPByClass('SearchMain')) && (pageType = 'LIST');
-  domPByClass('Question-main') && (pageType = 'QUESTION');
+  domPByClass('QuestionPage') && (pageType = 'QUESTION');
   domPByClass('Profile-main') && (pageType = 'USER_HOME');
   doContentItem(pageType, contentItem as HTMLElement, true);
 };
@@ -76,7 +105,9 @@ type IPageType = 'LIST' | 'QUESTION' | 'USER_HOME';
  */
 export const doContentItem = async (pageType?: IPageType, contentItem?: HTMLElement, needTimeout = false) => {
   if (!contentItem || !pageType) return;
-  const { topExportContent, fetchInterceptStatus, listItemCreatedAndModifiedTime, answerItemCreatedAndModifiedTime, userHomeContentTimeTop } = await myStorage.getConfig();
+  const config = await getContentConfig();
+  if (!config) return;
+  const { topExportContent, fetchInterceptStatus, listItemCreatedAndModifiedTime, answerItemCreatedAndModifiedTime, userHomeContentTimeTop } = config;
   const doFun = () => {
     const doByPageType: Record<IPageType, Function> = {
       LIST: () => {

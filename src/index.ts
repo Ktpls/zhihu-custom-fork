@@ -21,7 +21,7 @@ import { changeICO, changeTitle, myCachePageTitle } from './components/page-titl
 import { myCollectionExport, printArticle, printPeopleAnswer, printPeopleArticles } from './components/print';
 import { closeAllSelect } from './components/select';
 import { changeSizeBeforeResize, mySize } from './components/size';
-import { suspensionPickupAttribute } from './components/suspension';
+import { initSuspensionSwitch, suspensionPickupAttribute } from './components/suspension';
 import { addArticleTime, addQuestionTime } from './components/time';
 import { myListenUserHomeList } from './components/user-home';
 import { changeVideoStyle, fixVideoAutoPlay, initVideoDownload } from './components/video';
@@ -66,12 +66,19 @@ import { INNER_CSS } from './web-resources';
       fnLog('欢迎使用，初始化中...');
       config = CONFIG_DEFAULT;
     } else {
+      const savedConfig = config;
       config = {
         ...CONFIG_DEFAULT,
-        ...config,
+        ...savedConfig,
       };
+      // 从旧版单开关迁移到新版四个独立开关，避免升级后覆盖用户原选择。
+      ['listTitleTagQuestion', 'listTitleTagArticle', 'listTitleTagVideo', 'listTitleTagPin'].forEach((key) => {
+        if (savedConfig[key] === undefined && typeof savedConfig.questionTitleTag === 'boolean') {
+          config[key] = savedConfig.questionTitleTag;
+        }
+      });
     }
-    await myStorage.updateConfig(config);
+    await myStorage.updateConfig(config, false);
 
     initHistoryView();
     appendHiddenStyle();
@@ -110,9 +117,9 @@ import { INNER_CSS } from './web-resources';
           });
 
           // 用户主页回答
-          interceptionResponse(res, /\api\/v4\/members\/[^/]+\/answers/, (r) => setUserAnswer(r.data));
+          interceptionResponse(res, /\api\/v4\/members\/[^/]+\/answers/, (r) => setUserAnswer(r.data, res.url));
           // 用户主页文章
-          interceptionResponse(res, /\api\/v4\/members\/[^/]+\/articles/, (r) => setUserArticle(r.data));
+          interceptionResponse(res, /\api\/v4\/members\/[^/]+\/articles/, (r) => setUserArticle(r.data, res.url));
           // 个人信息
           interceptionResponse(res, /\/api\/v4\/me\?/, (r) => {
             setUserInfo(r);
@@ -163,6 +170,7 @@ import { INNER_CSS } from './web-resources';
       } catch {}
       const { removeTopAD } = await myStorage.getConfig();
       initHTML();
+      initSuspensionSwitch();
       initOperate();
       myCachePageTitle.set(document.title);
       // 以下设置都在 initHTML 之后执行
@@ -313,7 +321,6 @@ import { INNER_CSS } from './web-resources';
 
   // 复制代码块删除版权信息
   window.addEventListener('copy', function (event) {
-    console.log('???????copy')
     eventCopy(event);
   });
 
