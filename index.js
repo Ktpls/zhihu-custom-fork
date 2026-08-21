@@ -1092,9 +1092,12 @@
     renderBlockedUserList(domMain, blockedUsers, BLOCKED_USER_LIST_TYPE.zhihu);
     renderBlockedUserList(domMain, localBlockedUsers, BLOCKED_USER_LIST_TYPE.local);
   };
+  var MAX_BLOCKED_USERS_DISPLAY_COUNT = 100;
   var renderBlockedUserList = (domMain, list, listType) => {
     const nodeBlockedUsers = dom(`#${BLOCKED_USER_LIST_ID[listType]}`, domMain);
-    nodeBlockedUsers.innerHTML = list.map((info) => createBlockedUserItemHTML(info, listType)).join("");
+    const displayList = list.slice(0, MAX_BLOCKED_USERS_DISPLAY_COUNT);
+    const moreTip = list.length > MAX_BLOCKED_USERS_DISPLAY_COUNT ? `<div class="ctz-black-list-limit-tip" style="padding:4px 8px;font-size:12px;color:#999;">仅显示前 ${MAX_BLOCKED_USERS_DISPLAY_COUNT} 条记录（共 ${list.length} 条）</div>` : "";
+    nodeBlockedUsers.innerHTML = displayList.map((info) => createBlockedUserItemHTML(info, listType)).join("") + moreTip;
     nodeBlockedUsers.onclick = (event) => onBlockedUserListClick(event, listType);
   };
   var createBlockedUserItemHTML = (info, listType) => `<div class="ctz-black-item ctz-black-id-${escapeHTML(info.id)}" data-list-type="${listType}" data-info="${encodeBlockedUserInfo(info)}">${blackItemContent(
