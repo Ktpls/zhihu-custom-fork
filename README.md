@@ -1,5 +1,10 @@
 # 知乎修改器，一个可以自定义知乎的脚本
 
+### 改造版特性一览
+- 支持基于长度过滤回答
+- 设置中黑名单列表只展示前100条
+- 更高性能的黑名单过滤
+
 ### <a style="color: red;" href="https://github.com/liuyubing233/zhihu-custom/blob/main/Q%26A.md">提问前请先查看问题解答，已存在解答的内容不做回复</a>
 
 [问题解答](https://github.com/liuyubing233/zhihu-custom/blob/main/Q%26A.md)
