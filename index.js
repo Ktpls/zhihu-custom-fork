@@ -3241,11 +3241,23 @@
     notInterestedList: []
   };
   var SAVE_HISTORY_NUMBER = 500;
-  var BloomFilter = class {
+  var BloomFilter = class _BloomFilter {
     constructor(size = 1e3, hashCount = 3) {
       this.size = size;
       this.bitArray = new Uint8Array(size);
       this.hashFunctions = this.generateHashFunctions(hashCount);
+    }
+    static create(expectedItems, falsePositiveRate = 0.01) {
+      if (!Number.isFinite(expectedItems) || expectedItems <= 0) {
+        throw new Error("expectedItems 必须为正数");
+      }
+      if (!Number.isFinite(falsePositiveRate) || falsePositiveRate <= 0 || falsePositiveRate >= 1) {
+        throw new Error("falsePositiveRate 必须在 (0, 1) 之间");
+      }
+      const ln2 = Math.LN2;
+      const m = Math.max(1, Math.ceil(-expectedItems * Math.log(falsePositiveRate) / (ln2 * ln2)));
+      const k = Math.max(1, Math.ceil(m / expectedItems * ln2));
+      return new _BloomFilter(m, k);
     }
     generateHashFunctions(count) {
       const functions = [];
@@ -3316,6 +3328,7 @@
     async add(item) {
       await this.ensureCacheBuilt();
       const key = this.key_getter(item);
+      this.bloom.add(key);
       this.map.set(key, item);
     }
     async remove(item) {
@@ -3328,13 +3341,12 @@
       this.bloom = null;
     }
     async rebuild() {
-      this.map = /* @__PURE__ */ new Map();
-      this.bloom = new BloomFilter(1e3, 3);
       const allItems = await this.get_all();
-      const size = Math.max(allItems.length * 3, 1e3);
-      this.bloom = new BloomFilter(size, 3);
+      this.map = /* @__PURE__ */ new Map();
+      this.bloom = BloomFilter.create(Math.max(allItems.length, 1));
       for (const item of allItems) {
         const key = this.key_getter(item);
+        this.bloom.add(key);
         this.map.set(key, item);
       }
     }
@@ -3344,6 +3356,9 @@
     }
     async key_exist(key) {
       await this.ensureCacheBuilt();
+      if (!this.bloom.mightContain(key)) {
+        return false;
+      }
       return this.map.has(key);
     }
     async get(key) {
