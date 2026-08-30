@@ -3244,7 +3244,7 @@
   var BloomFilter = class _BloomFilter {
     constructor(size = 1e3, hashCount = 3) {
       this.size = size;
-      this.bitArray = new Uint8Array(size);
+      this.bitArray = new Uint8Array(Math.ceil(size / 8));
       this.hashFunctions = this.generateHashFunctions(hashCount);
     }
     static create(expectedItems, falsePositiveRate = 0.01) {
@@ -3280,7 +3280,9 @@
       }
       for (const hashFn of this.hashFunctions) {
         const index2 = hashFn(key);
-        this.bitArray[index2] = 1;
+        const byteIndex = index2 >> 3;
+        const bitOffset = index2 % 8;
+        this.bitArray[byteIndex] |= 1 << bitOffset;
       }
     }
     mightContain(key) {
@@ -3289,7 +3291,9 @@
       }
       for (const hashFn of this.hashFunctions) {
         const index2 = hashFn(key);
-        if (this.bitArray[index2] === 0) {
+        const byteIndex = index2 >> 3;
+        const bitOffset = index2 % 8;
+        if ((this.bitArray[byteIndex] & 1 << bitOffset) === 0) {
           return false;
         }
       }
@@ -3304,8 +3308,22 @@
     getHashFunctionCount() {
       return this.hashFunctions.length;
     }
+    static popcountByte(x) {
+      x = (x & 85) + (x >>> 1 & 85);
+      x = (x & 51) + (x >>> 2 & 51);
+      x = (x & 15) + (x >>> 4 & 15);
+      return x;
+    }
+    countBits() {
+      const { bitArray } = this;
+      let total = 0;
+      for (let i = 0; i < bitArray.length; i++) {
+        total += _BloomFilter.popcountByte(bitArray[i]);
+      }
+      return total;
+    }
     estimateCount() {
-      const ones = this.bitArray.reduce((sum, bit) => sum + bit, 0);
+      const ones = this.countBits();
       if (ones === 0) return 0;
       const m = this.size;
       const k = this.hashFunctions.length;
