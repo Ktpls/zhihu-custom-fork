@@ -9,7 +9,7 @@ import {
   CLASS_BTN_REMOVE_BLOCKED,
   createBlockedUserTagHTML,
   BLOCKED_USER_LIST_TYPE,
-  findBlockedUserWithType,
+  TBlockedUserListType,
   IBlockedUser,
   removeBlockUser,
   removeItemAfterBlock,
@@ -162,9 +162,8 @@ const formatComments = async (nodeComments?: HTMLElement, commentBoxClass = '.cs
       const userLink = userOne.querySelector('.css-1gomreu a') as HTMLAnchorElement;
       if (!userLink) return;
       const userId = getUserIdFromPeopleLink(userLink.href);
-      /** 匹配在黑名单的位置 */
-      const blockedUserInfo = findBlockedUserWithType(config, userId);
-      const findUser = blockedUserInfo?.user;
+      /** 通过黑名单缓存匹配用户（缓存不记录来源 listType，故 listType 无法取得） */
+      const findUser = await myStorage.getBlacklistedDude(userId);
       /** 是否在黑名单中 */
       const isBlocked = !!findUser;
 
@@ -189,7 +188,8 @@ const formatComments = async (nodeComments?: HTMLElement, commentBoxClass = '.cs
         className: CLASS_BLOCK_USER_BOX,
         innerHTML: changeBlockedUsersBox(isBlocked, showBlockUserComment, showBlockUserCommentTag, showBlockUserTagType, findUser),
       });
-      let currentBlockedSource = blockedUserInfo?.listType;
+      // 缓存不记录来源 listType，这里始终为 undefined（保持下游取不到的行为）
+      let currentBlockedSource: TBlockedUserListType | undefined = undefined;
       let currentBlockedUser = findUser;
       nBox.onclick = async function (event) {
         const me = this as HTMLElement;

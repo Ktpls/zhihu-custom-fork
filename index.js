@@ -4818,8 +4818,7 @@
         const userLink = userOne.querySelector(".css-1gomreu a");
         if (!userLink) return;
         const userId = getUserIdFromPeopleLink(userLink.href);
-        const blockedUserInfo = findBlockedUserWithType(config, userId);
-        const findUser = blockedUserInfo?.user;
+        const findUser = await myStorage.getBlacklistedDude(userId);
         const isBlocked = !!findUser;
         if (index2 === 0 && findUser) {
           if (replaceBlockUserContentWithStar) {
@@ -4837,7 +4836,7 @@
           className: CLASS_BLOCK_USER_BOX,
           innerHTML: changeBlockedUsersBox(isBlocked, showBlockUserComment, showBlockUserCommentTag, showBlockUserTagType, findUser)
         });
-        let currentBlockedSource = blockedUserInfo?.listType;
+        let currentBlockedSource = void 0;
         let currentBlockedUser = findUser;
         nBox.onclick = async function(event) {
           const me = this;
