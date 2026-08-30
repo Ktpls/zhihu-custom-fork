@@ -3,7 +3,7 @@ import { BloomFilter } from './bloom-filter';
 export class BlacklistCache<T = any> {
   private map: Map<string, T> | null = null;
   private bloom: BloomFilter | null = null;
-  //暂时无需布隆过滤器，对其的操作已注释
+  //布隆过滤器用于快速判不存在，命中后再回退到 map 精确确认
 
   // 函数变量（在构造函数当中传入并赋值）
   private key_getter: (item: T) => string;
@@ -38,7 +38,7 @@ export class BlacklistCache<T = any> {
   public async add(item: T): Promise<void> {
     await this.ensureCacheBuilt();
     const key = this.key_getter(item);
-    //this.bloom!.add(key);
+    this.bloom!.add(key);
     this.map!.set(key, item);
   }
 
@@ -68,34 +68,28 @@ export class BlacklistCache<T = any> {
    * 重建
    * 清空布隆过滤器和map
    * 获取所有元素
-   * 根据max(元素数*3, 1000)重创建布隆过滤器
+   * 根据元素数量按预期误判率(1%)重创建布隆过滤器
    * 将所有元素添加
    */
   public async rebuild(): Promise<void> {
-    // 清空现有数据
-    this.map = new Map<string, T>();
-    this.bloom = new BloomFilter(1000, 3);
-
-    // 获取所有元素
+    // 获取所有元素（先取数据，以便确定预期元素数）
     const allItems = await this.get_all();
 
-    // 根据元素数量重新创建布隆过滤器
-    const size = Math.max(allItems.length * 3, 1000);
-    this.bloom = new BloomFilter(size, 3);
+    // 清空现有数据
+    this.map = new Map<string, T>();
+    // 根据预期元素数创建布隆过滤器（默认误判率 1%）
+    this.bloom = BloomFilter.create(Math.max(allItems.length, 1));
 
     // 将所有元素添加到缓存中
     for (const item of allItems) {
       const key = this.key_getter(item);
-      //this.bloom.add(key);
+      this.bloom!.add(key);
       this.map.set(key, item);
     }
   }
 
   /**
    * 判断元素是否存在
-   * 获取key
-   * 判断key是否存在于布隆过滤器中，若不存在则返回不存在
-   * 判断元素是否在map中，若不存在则返回不存在
    */
   public async exist(item: T): Promise<boolean> {
     const key = this.key_getter(item);
@@ -104,15 +98,15 @@ export class BlacklistCache<T = any> {
 
   /**
    * 判断指定的key是否存在
-   * 先用布隆过滤器快速判断
+   * 先用布隆过滤器快速判断（可能误报但不误漏）
    * 布隆过滤器说可能存在，需要在map中确认
    */
   public async key_exist(key: string): Promise<boolean> {
     await this.ensureCacheBuilt();
-    // 先用布隆过滤器快速判断
-    // if (!this.bloom!.mightContain(key)) {
-    //   return false; // 一定不存在
-    // }
+    // 先用布隆过滤器快速判断（布隆过滤器可能有误报但绝不会误漏）
+    if (!this.bloom!.mightContain(key)) {
+      return false; // 布隆过滤器说一定不存在
+    }
 
     // 布隆过滤器说可能存在，需要在map中确认
     return this.map!.has(key);

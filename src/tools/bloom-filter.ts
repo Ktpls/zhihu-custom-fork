@@ -20,6 +20,31 @@ export class BloomFilter {
   }
 
   /**
+   * 根据预期元素数和目标误判率创建布隆过滤器
+   * 参考公式：
+   *   m = -n * ln(p) / (ln 2)^2   （最优位数组长度）
+   *   k = (m / n) * ln 2 ≈ 0.693 * m / n  （最优哈希函数数量）
+   * @param expectedItems 预期元素数量 n
+   * @param falsePositiveRate 目标误判率 p（0 < p < 1，如 0.01 表示 1%）
+   */
+  public static create(expectedItems: number, falsePositiveRate = 0.01): BloomFilter {
+    if (!Number.isFinite(expectedItems) || expectedItems <= 0) {
+      throw new Error('expectedItems 必须为正数');
+    }
+    if (!Number.isFinite(falsePositiveRate) || falsePositiveRate <= 0 || falsePositiveRate >= 1) {
+      throw new Error('falsePositiveRate 必须在 (0, 1) 之间');
+    }
+
+    const ln2 = Math.LN2;
+    // 最优位数组长度 m = -n * ln(p) / (ln 2)^2，向上取整，最小为 1
+    const m = Math.max(1, Math.ceil((-expectedItems * Math.log(falsePositiveRate)) / (ln2 * ln2)));
+    // 最优哈希函数数量 k = (m / n) * ln 2，向上取整，最小为 1
+    const k = Math.max(1, Math.ceil((m / expectedItems) * ln2));
+
+    return new BloomFilter(m, k);
+  }
+
+  /**
    * 生成指定数量的哈希函数
    * 使用简单的多项式滚动哈希，通过不同的基数来创建多个独立的哈希函数
    */
