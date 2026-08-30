@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         知乎修改器🤜持续更新🤛努力实现功能最全的知乎配置插件
+// @name         知乎修改器 LollipopSpec增强版
 // @namespace    http://tampermonkey.net/
 // @version      5.21.4
-// @description  知乎高性能模式，页面模块自定义隐藏，列表及回答内容过滤，保存浏览历史记录，推荐页内容缓存，一键邀请，复制代码块删除版权信息，列表种类和关键词强过滤并自动调用「不感兴趣」接口，屏蔽用户回答，视频下载，设置自动收起所有长回答或自动展开所有回答，移除登录提示弹窗，设置过滤故事档案局和盐选科普回答等知乎官方账号回答，手动调节文字大小，切换主题及深色模式调整，隐藏知乎热搜，列表添加标签种类，去除广告，设置购买链接显示方式，收藏夹内容、回答、文章导出为PDF，一键移除所有屏蔽选项，外链直接打开，键盘左右切换预览图片，快捷键收起时修正定位，更多功能请在插件里体验...
+// @description  提供一些额外的功能，包括按回答长度过滤、高性能黑名单等。fork 自 https://greasyfork.org/zh-CN/scripts/423404-知乎修改器-持续更新-努力实现功能最全的知乎配置插件 ...
 // @compatible   edge Violentmonkey
 // @compatible   edge Tampermonkey
 // @compatible   chrome Violentmonkey
@@ -11,7 +11,7 @@
 // @compatible   firefox Tampermonkey
 // @compatible   safari Violentmonkey
 // @compatible   safari Tampermonkey
-// @author       lyb233
+// @author       Ktpls
 // @license      MIT
 // @match        *://*.zhihu.com/*
 // @grant        unsafeWindow
