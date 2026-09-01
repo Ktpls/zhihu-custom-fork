@@ -2421,6 +2421,15 @@
       if (!message2 && !blockedUserToReplace && removeItemQuestionAsk && nodeItem.querySelector(".TopstoryQuestionAskItem")) {
         message2 = "屏蔽邀请回答";
       }
+      if (!message2 && !blockedUserToReplace && blockAnswerShorterThanThreshOnList > 0) {
+        const richContent = nodeItem.querySelector(".RichContent-inner");
+        if (richContent) {
+          const contentText = richContent.innerText || "";
+          if (contentText.length < blockAnswerShorterThanThreshOnList) {
+            message2 = `已屏蔽一条短回答（${contentText.length}字符）`;
+          }
+        }
+      }
       !message2 && !blockedUserToReplace && (message2 = replaceBlockWord(title, nodeContentItem, filterKeywordPatterns, title, "标题"));
       if (!message2 && !blockedUserToReplace) {
         const domRichContent = nodeItem.querySelector(".RichContent");

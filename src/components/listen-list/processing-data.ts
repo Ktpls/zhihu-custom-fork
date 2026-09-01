@@ -132,6 +132,17 @@ export const processingData = async (nodes: NodeListOf<HTMLElement>) => {
       message = '屏蔽邀请回答';
     }
 
+    // 屏蔽短回答
+    if (!message && !blockedUserToReplace && blockAnswerShorterThanThreshOnList > 0) {
+      const richContent = nodeItem.querySelector('.RichContent-inner') as HTMLElement;
+      if (richContent) {
+        const contentText = richContent.innerText || '';
+        if (contentText.length < blockAnswerShorterThanThreshOnList) {
+          message = `已屏蔽一条短回答（${contentText.length}字符）`;
+        }
+      }
+    }
+
     // 标题屏蔽词过滤
     !message && !blockedUserToReplace && (message = replaceBlockWord(title, nodeContentItem, filterKeywordPatterns, title, '标题'));
     // 内容屏蔽词过滤
