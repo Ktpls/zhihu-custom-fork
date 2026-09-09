@@ -148,4 +148,25 @@ export const onPushBlacklistToZhihu = async () => {
 export const onPullBlacklistFromZhihu = async () => {
   return;
   blockUserOnZhihuServer;
-}
+};
+
+/** 转移知乎黑名单到本地黑名单 */
+export const onTransferZhihuBlacklistToLocal = async () => {
+  if (!confirm('确定要将所有知乎黑名单用户转移到本地黑名单吗？\\n此操作会清空知乎黑名单，并合并到本地黑名单（标签将合并）。')) return;
+
+  const config = await myStorage.getConfig();
+  const { blockedUsers = [], localBlockedUsers = [] } = config;
+
+  // 合并知乎黑名单和本地黑名单（去重并合并标签）
+  const mergedList = mergeBlockedUsers([...blockedUsers, ...localBlockedUsers]);
+
+  await myStorage.updateConfig({
+    ...config,
+    blockedUsers: [], // 清空知乎黑名单
+    localBlockedUsers: mergedList,
+  });
+
+  // 更新 UI
+  initHTMLBlockedUsers(document.body);
+  message('知乎黑名单已转移到本地黑名单');
+};
