@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         知乎修改器 LollipopSpec增强版
 // @namespace    http://tampermonkey.net/
-// @version      5.21.4m1
+// @version      5.21.4m2
 // @description  提供一些额外的功能，包括按回答长度过滤、高性能黑名单等。fork 自 https://greasyfork.org/zh-CN/scripts/423404-知乎修改器-持续更新-努力实现功能最全的知乎配置插件 ...
 // @compatible   edge Violentmonkey
 // @compatible   edge Tampermonkey
@@ -4868,10 +4868,11 @@
       const itemCommentUsers = itemUserBox.querySelectorAll(".css-1tww9qq");
       let isHidden = false;
       let blockedUserToReplace = void 0;
-      itemCommentUsers.forEach(async (userOne, index2) => {
-        if (isHidden) return;
+      for (let index2 = 0; index2 < itemCommentUsers.length; index2++) {
+        const userOne = itemCommentUsers[index2];
+        if (isHidden) break;
         const userLink = userOne.querySelector(".css-1gomreu a");
-        if (!userLink) return;
+        if (!userLink) continue;
         const userId = getUserIdFromPeopleLink(userLink.href);
         const findUser = await myStorage.getBlacklistedDude(userId);
         const isBlocked = !!findUser;
@@ -4881,12 +4882,12 @@
           } else if (removeBlockUserComment) {
             isHidden = true;
             fnLog(`已隐藏一个黑名单用户的评论，${findUser.name}`);
-            return;
+            break;
           }
         }
-        if (userOne.querySelector(`.${CLASS_BLOCK_USER_BOX}`)) return;
+        if (userOne.querySelector(`.${CLASS_BLOCK_USER_BOX}`)) continue;
         const commentUserInfo = commentAuthors.find((i2) => i2.id === userId);
-        if (!commentUserInfo) return;
+        if (!commentUserInfo) continue;
         const nBox = domC("div", {
           className: CLASS_BLOCK_USER_BOX,
           innerHTML: changeBlockedUsersBox(isBlocked, showBlockUserComment, showBlockUserCommentTag, showBlockUserTagType, findUser)
@@ -4917,7 +4918,7 @@
           }
         };
         userOne.append(nBox);
-      });
+      }
       if (isHidden) {
         item.style.display = "none";
         item.classList.add(CTZ_HIDDEN_ITEM_CLASS);

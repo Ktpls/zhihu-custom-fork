@@ -157,10 +157,11 @@ const formatComments = async (nodeComments?: HTMLElement, commentBoxClass = '.cs
     let isHidden = false;
     let blockedUserToReplace: IBlockedUser | undefined = undefined;
 
-    itemCommentUsers.forEach(async (userOne, index) => {
-      if (isHidden) return;
+    for (let index = 0; index < itemCommentUsers.length; index++) {
+      const userOne = itemCommentUsers[index];
+      if (isHidden) break;
       const userLink = userOne.querySelector('.css-1gomreu a') as HTMLAnchorElement;
-      if (!userLink) return;
+      if (!userLink) continue;
       const userId = getUserIdFromPeopleLink(userLink.href);
       /** 通过黑名单缓存匹配用户（缓存不记录来源 listType，故 listType 无法取得） */
       const findUser = await myStorage.getBlacklistedDude(userId);
@@ -174,15 +175,15 @@ const formatComments = async (nodeComments?: HTMLElement, commentBoxClass = '.cs
         } else if (removeBlockUserComment) {
           isHidden = true;
           fnLog('已隐藏一个黑名单用户的评论，' + `${findUser.name}`);
-          return;
+          break;
         }
       }
       // 已经添加过盒子的内容不再处理
-      if (userOne.querySelector(`.${CLASS_BLOCK_USER_BOX}`)) return;
+      if (userOne.querySelector(`.${CLASS_BLOCK_USER_BOX}`)) continue;
 
       /** 查找到的用户信息 */
       const commentUserInfo = commentAuthors.find((i) => i.id === userId);
-      if (!commentUserInfo) return;
+      if (!commentUserInfo) continue;
 
       const nBox = domC('div', {
         className: CLASS_BLOCK_USER_BOX,
@@ -217,7 +218,7 @@ const formatComments = async (nodeComments?: HTMLElement, commentBoxClass = '.cs
         }
       };
       userOne.append(nBox);
-    });
+    }
 
     if (isHidden) {
       item.style.display = 'none';

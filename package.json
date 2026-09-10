@@ -1,7 +1,7 @@
 {
   "name": "zhihu-custom",
   "displayName": "知乎修改器 LollipopSpec增强版",
-  "version": "5.21.4m1",
+  "version": "5.21.4m2",
   "description": "提供一些额外的功能，包括按回答长度过滤、高性能黑名单等。fork 自 https://greasyfork.org/zh-CN/scripts/423404-知乎修改器-持续更新-努力实现功能最全的知乎配置插件 ...",
   "main": "index.js",
   "scripts": {
