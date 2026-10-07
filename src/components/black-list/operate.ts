@@ -2,7 +2,7 @@ import { store } from '../../store';
 import { dom, domById, domC, fnDomReplace, formatTime, message, myStorage } from '../../tools';
 import { Semaphore } from '../../tools/semaphore';
 import { ID_BLOCK_LIST, initHTMLBlockedUsers } from './create-html';
-import { blockUserOnZhihuServer, removeBlockUser, removeBlockUserOnZhihuServer } from './do-fetch';
+import { blockUserOnZhihuServer, removeBlockUser } from './do-fetch';
 import { BLACK_LIST_CONFIG_NAMES, IBlockedUser, IConfigBlackList, mergeBlockedUsers } from './types';
 
 /** 导出黑名单部分配置 */
@@ -127,27 +127,101 @@ export function onSyncBlackList(offset = 0, l: IBlockedUser[] = []) {
     });
 }
 export const onPushBlacklistToZhihu = async () => {
-  return;
-  const { blockedUsers: bois = [] } = await myStorage.getConfig();
-  // 创建信号量，限制并发数为100
+  const config = await myStorage.getConfig();
+  const { localBlockedUsers = [] } = config;
+  if (!localBlockedUsers.length) {
+    message('本地黑名单为空，无需推送');
+    return;
+  }
+  message(`开始推送知乎黑名单，共 ${localBlockedUsers.length} 条`);
   const semaphore = new Semaphore(100);
-  Promise.all(bois.map(async (item) => {
-    // 获取信号量
+  let successCount = 0;
+  let failCount = 0;
+  for (const item of localBlockedUsers) {
     await semaphore.acquire();
     try {
       const { urlToken } = item;
-      await removeBlockUserOnZhihuServer(urlToken);
+      if (!urlToken) continue;
+      await blockUserOnZhihuServer(urlToken);
+      successCount += 1;
+    } catch (error) {
+      failCount += 1;
+      message(`推送黑名单用户 ${item.name} 失败`);
     } finally {
-      // 释放信号量
       await semaphore.release();
     }
-  })).then(() => {
-    message('黑名单已推送至知乎');
-  });
+  }
+  message(`黑名单已推送至知乎，成功 ${successCount}，失败 ${failCount}`);
 }
 export const onPullBlacklistFromZhihu = async () => {
-  return;
-  blockUserOnZhihuServer;
+  const config = await myStorage.getConfig();
+  const { blockedUsers = [], localBlockedUsers = [] } = config;
+
+  message('开始拉取知乎黑名单，等待拉取最新黑名单记录...');
+
+  // 本地已有记录的 id 集合
+  const existedIds = new Set<string>([
+    ...blockedUsers.map((item) => item.id),
+    ...localBlockedUsers.map((item) => item.id),
+  ]);
+
+  const limit = 20;
+  const headers = store.getFetchHeaders();
+  let offset = 0;
+  let hasMore = true;
+  const addedToZhihu: IBlockedUser[] = [];
+
+  while (hasMore) {
+    const response = await fetch(
+      `https://www.zhihu.com/api/v3/settings/blocked_users?offset=${offset}&limit=${limit}`,
+      {
+        method: 'GET',
+        headers: new Headers(headers),
+        credentials: 'include',
+      }
+    );
+
+    if (!response.ok) {
+      const text = await response.clone().text().catch(() => '');
+      message(`拉取知乎黑名单失败：${response.status} ${text}`);
+      break;
+    }
+
+    const result = await response.json();
+    const data = result.data || [];
+    const paging = result.paging || { is_end: true };
+
+    for (const item of data) {
+      const { id, name, url_token } = item;
+      if (id && !existedIds.has(id)) {
+        const newUser: IBlockedUser = {
+          id,
+          name: name || '',
+          urlToken: url_token || '',
+          tags: [],
+        };
+        // 拉取优先添加到知乎黑名单
+        addedToZhihu.push(newUser);
+        existedIds.add(id);
+      }
+    }
+
+    if (paging.is_end) {
+      hasMore = false;
+    } else {
+      offset += limit;
+    }
+  }
+
+  if (addedToZhihu.length) {
+    await myStorage.updateConfig({
+      ...config,
+      blockedUsers: [...blockedUsers, ...addedToZhihu],
+    });
+  }
+
+  initHTMLBlockedUsers(document.body);
+  message('知乎黑名单拉取完成');
 };
 
 /** 转移知乎黑名单到本地黑名单 */

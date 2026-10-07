@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         知乎修改器 LollipopSpec增强版
 // @namespace    http://tampermonkey.net/
-// @version      5.21.4m2
+// @version      5.21.4m3
 // @description  提供一些额外的功能，包括按回答长度过滤、高性能黑名单等。fork 自 https://greasyfork.org/zh-CN/scripts/423404-知乎修改器-持续更新-努力实现功能最全的知乎配置插件 ...
 // @compatible   edge Violentmonkey
 // @compatible   edge Tampermonkey
@@ -474,17 +474,6 @@
       });
     });
   };
-  async function removeBlockUserOnZhihuServer(urlToken) {
-    const headers = store.getFetchHeaders();
-    await fetch(`https://www.zhihu.com/api/v4/members/${urlToken}/actions/block`, {
-      method: "DELETE",
-      headers: new Headers({
-        ...headers,
-        "x-xsrftoken": document.cookie.match(/(?<=_xsrf=)[\w-]+(?=;)/)[0] || ""
-      }),
-      credentials: "include"
-    });
-  }
   async function blockUserOnZhihuServer(urlToken) {
     const headers = store.getFetchHeaders();
     await fetch(`https://www.zhihu.com/api/v4/members/${urlToken}/actions/block`, {
@@ -659,24 +648,89 @@
     });
   }
   var onPushBlacklistToZhihu = async () => {
-    return;
-    const { blockedUsers: bois = [] } = await myStorage.getConfig();
+    const config = await myStorage.getConfig();
+    const { localBlockedUsers = [] } = config;
+    if (!localBlockedUsers.length) {
+      message("本地黑名单为空，无需推送");
+      return;
+    }
+    message(`开始推送知乎黑名单，共 ${localBlockedUsers.length} 条`);
     const semaphore = new Semaphore(100);
-    Promise.all(bois.map(async (item) => {
+    let successCount = 0;
+    let failCount = 0;
+    for (const item of localBlockedUsers) {
       await semaphore.acquire();
       try {
         const { urlToken } = item;
-        await removeBlockUserOnZhihuServer(urlToken);
+        if (!urlToken) continue;
+        await blockUserOnZhihuServer(urlToken);
+        successCount += 1;
+      } catch (error) {
+        failCount += 1;
+        message(`推送黑名单用户 ${item.name} 失败`);
       } finally {
         await semaphore.release();
       }
-    })).then(() => {
-      message("黑名单已推送至知乎");
-    });
+    }
+    message(`黑名单已推送至知乎，成功 ${successCount}，失败 ${failCount}`);
   };
   var onPullBlacklistFromZhihu = async () => {
-    return;
-    blockUserOnZhihuServer;
+    const config = await myStorage.getConfig();
+    const { blockedUsers = [], localBlockedUsers = [] } = config;
+    message("开始拉取知乎黑名单，等待拉取最新黑名单记录...");
+    const existedIds = /* @__PURE__ */ new Set([
+      ...blockedUsers.map((item) => item.id),
+      ...localBlockedUsers.map((item) => item.id)
+    ]);
+    const limit = 20;
+    const headers = store.getFetchHeaders();
+    let offset = 0;
+    let hasMore = true;
+    const addedToZhihu = [];
+    while (hasMore) {
+      const response = await fetch(
+        `https://www.zhihu.com/api/v3/settings/blocked_users?offset=${offset}&limit=${limit}`,
+        {
+          method: "GET",
+          headers: new Headers(headers),
+          credentials: "include"
+        }
+      );
+      if (!response.ok) {
+        const text = await response.clone().text().catch(() => "");
+        message(`拉取知乎黑名单失败：${response.status} ${text}`);
+        break;
+      }
+      const result = await response.json();
+      const data = result.data || [];
+      const paging = result.paging || { is_end: true };
+      for (const item of data) {
+        const { id, name, url_token } = item;
+        if (id && !existedIds.has(id)) {
+          const newUser = {
+            id,
+            name: name || "",
+            urlToken: url_token || "",
+            tags: []
+          };
+          addedToZhihu.push(newUser);
+          existedIds.add(id);
+        }
+      }
+      if (paging.is_end) {
+        hasMore = false;
+      } else {
+        offset += limit;
+      }
+    }
+    if (addedToZhihu.length) {
+      await myStorage.updateConfig({
+        ...config,
+        blockedUsers: [...blockedUsers, ...addedToZhihu]
+      });
+    }
+    initHTMLBlockedUsers(document.body);
+    message("知乎黑名单拉取完成");
   };
   var onTransferZhihuBlacklistToLocal = async () => {
     if (!confirm("确定要将所有知乎黑名单用户转移到本地黑名单吗？\\n此操作会清空知乎黑名单，并合并到本地黑名单（标签将合并）。")) return;
