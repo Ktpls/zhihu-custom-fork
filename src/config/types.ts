@@ -426,6 +426,10 @@ export interface IPfConfig extends IConfigHidden, IConfigFilter, IConfigSuspensi
   articleCreateTimeToTop?: boolean;
   /** 黑名单与服务器同步 */
   syncBlacklistWithZhihuServer?: boolean;
+  /** 高性能黑名单缓存 - 启用布隆过滤器缓存 */
+  useBloomBlacklistCache?: boolean;
+  /** 高性能黑名单缓存 - 启用HashMap缓存 */
+  useHashmapBlacklistCache?: boolean;
   /** 购物链接显示设置 0 1 2 */
   linkShopping?: ELinkShopping;
   /** 列表标题文字大小 */

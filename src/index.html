@@ -393,6 +393,19 @@
           <div class="ctz-title">通用设置</div>
           <div id="CTZ_BLACKLIST_COMMON"></div>
 
+          <!-- 高性能黑名单缓存 -->
+          <div class="ctz-title">高性能黑名单缓存</div>
+          <div class="ctz-form-box">
+            <div class="ctz-form-box-item">
+              <div>启用布隆过滤器缓存<span class="ctz-tooltip"><span>?</span><span>布隆过滤器用于快速判不存在，命中后再逐级确认（更改后请重新刷新页面）</span></span></div>
+              <div><input class="ctz-i ctz-switch" name="useBloomBlacklistCache" type="checkbox" value="on" /></div>
+            </div>
+            <div class="ctz-form-box-item">
+              <div>启用HashMap缓存<span class="ctz-tooltip"><span>?</span><span>HashMap缓存提供精确查询结果（更改后请重新刷新页面）</span></span></div>
+              <div><input class="ctz-i ctz-switch" name="useHashmapBlacklistCache" type="checkbox" value="on" /></div>
+            </div>
+          </div>
+
           <div class="ctz-form-box">
             <div class="ctz-form-box-item">
               <div>黑名单与知乎服务器同步</div>

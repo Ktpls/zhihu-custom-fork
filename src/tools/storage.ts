@@ -139,6 +139,14 @@ export const myStorage = {
         ...((config['blockedUsers'] || []) as IBlockedUser[]),
         ...((config['localBlockedUsers'] || []) as IBlockedUser[]),
       ];
+    },
+    // 高性能黑名单缓存开关配置：构建缓存时读取，未启用则设置对应缓存为 null
+    async () => {
+      const config = await myStorage.getConfig();
+      return {
+        bloom: config['useBloomBlacklistCache'] !== false,
+        map: config['useHashmapBlacklistCache'] !== false,
+      };
     }
   ),
   getWeakCachedBlacklist: function () {

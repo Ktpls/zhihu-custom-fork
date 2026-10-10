@@ -257,6 +257,8 @@ export const CONFIG_DEFAULT: IPfConfig = {
   homeContentOpen: EHomeContentOpen.默认,
   removeBlockUserContent: true,
   syncBlacklistWithZhihuServer: true,
+  useBloomBlacklistCache: true,
+  useHashmapBlacklistCache: true,
   replaceBlockUserContentWithStar: false,
   blockedUsers: [],
   localBlockedUsers: [],
