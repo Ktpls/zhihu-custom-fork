@@ -134,9 +134,17 @@ export const onPushBlacklistToZhihu = async () => {
     return;
   }
   message(`开始推送知乎黑名单，共 ${localBlockedUsers.length} 条`);
+
+  const buttonPush = dom('button[name="pushBlacklistToZhihu"]') as HTMLButtonElement;
+  if (!buttonPush.querySelector('ctz-loading')) {
+    fnDomReplace(buttonPush, { innerHTML: '<i class="ctz-loading">↻</i>', disabled: true });
+  }
+
   const semaphore = new Semaphore(100);
+  const total = localBlockedUsers.length;
   let successCount = 0;
   let failCount = 0;
+  let finishNumber = 0;
   for (const item of localBlockedUsers) {
     await semaphore.acquire();
     try {
@@ -149,8 +157,13 @@ export const onPushBlacklistToZhihu = async () => {
       message(`推送黑名单用户 ${item.name} 失败`);
     } finally {
       await semaphore.release();
+      finishNumber += 1;
+      if (finishNumber < total) {
+        fnDomReplace(buttonPush, { innerHTML: `<i class="ctz-loading">↻</i>（${finishNumber} / ${total}）`, disabled: true });
+      }
     }
   }
+  fnDomReplace(buttonPush, { innerHTML: '向知乎推送', disabled: false });
   message(`黑名单已推送至知乎，成功 ${successCount}，失败 ${failCount}`);
 }
 export const onPullBlacklistFromZhihu = async () => {
@@ -158,6 +171,11 @@ export const onPullBlacklistFromZhihu = async () => {
   const { blockedUsers = [], localBlockedUsers = [] } = config;
 
   message('开始拉取知乎黑名单，等待拉取最新黑名单记录...');
+
+  const buttonPull = dom('button[name="pullBlacklistFromZhihu"]') as HTMLButtonElement;
+  if (!buttonPull.querySelector('ctz-loading')) {
+    fnDomReplace(buttonPull, { innerHTML: '<i class="ctz-loading">↻</i>', disabled: true });
+  }
 
   // 本地已有记录的 id 集合
   const existedIds = new Set<string>([
@@ -169,6 +187,7 @@ export const onPullBlacklistFromZhihu = async () => {
   const headers = store.getFetchHeaders();
   let offset = 0;
   let hasMore = true;
+  let hasError = false;
   const addedToZhihu: IBlockedUser[] = [];
 
   while (hasMore) {
@@ -184,6 +203,7 @@ export const onPullBlacklistFromZhihu = async () => {
     if (!response.ok) {
       const text = await response.clone().text().catch(() => '');
       message(`拉取知乎黑名单失败：${response.status} ${text}`);
+      hasError = true;
       break;
     }
 
@@ -210,6 +230,7 @@ export const onPullBlacklistFromZhihu = async () => {
       hasMore = false;
     } else {
       offset += limit;
+      fnDomReplace(buttonPull, { innerHTML: `<i class="ctz-loading">↻</i>（${offset + limit} / ${paging.totals}）`, disabled: true });
     }
   }
 
@@ -220,8 +241,13 @@ export const onPullBlacklistFromZhihu = async () => {
     });
   }
 
+  fnDomReplace(buttonPull, { innerHTML: '从知乎拉取', disabled: false });
   initHTMLBlockedUsers(document.body);
-  message('知乎黑名单拉取完成');
+  if (hasError) {
+    message(`知乎黑名单拉取中断，已获取新增 ${addedToZhihu.length} 条`);
+  } else {
+    message('知乎黑名单拉取完成');
+  }
 };
 
 /** 转移知乎黑名单到本地黑名单 */
